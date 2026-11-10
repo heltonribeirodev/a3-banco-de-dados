@@ -52,7 +52,7 @@ Preencha o responsável e a data de cada item.
 | 3 | **PowerPoint.** Montar a partir de `docs/apresentacao_roteiro.md` (poucos textos por slide). O arquivo apresentado em 01/12 deve ser **o mesmo** enviado em 28/11. | | | ☐ |
 | 4 | **Ensaiar a demonstração** (roteiro no fim de `docs/apresentacao_roteiro.md`) no computador que será usado na apresentação, e uma vez num celular. | | | ☐ |
 | 5 | **Estudar as perguntas e os 6 exercícios** de `docs/perguntas_banca.md`. A banca pode pedir alteração de código ao vivo. Todos devem saber explicar o projeto. | todos | | ☐ |
-| 6 | **Testar a collection do Postman** no Runner (opcional; se der problema, tirar da entrega). | | | ☐ |
+| 6 | **Testar a collection do Postman** no Runner (opcional). Testada em 10/11/2026: 50 de 50 testes passaram. | | | ☑ |
 | 7 | **Fazer o merge** da branch `a3-finalizacao` na `master` (ou entregar o zip dessa branch). | | | ☐ |
 | 8 | **Montar o pacote de entrega** e enviar no Classroom (um integrante): ver lista abaixo. | | 28/11 | ☐ |
 
