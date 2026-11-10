@@ -33,8 +33,12 @@
 **Falar:** o exemplo do reajuste: o preço do produto muda, mas as comandas antigas não podem mudar. Total não é coluna: é derivado pela view.
 
 ### Slide 7 — Script SQL: DDL e DML (1:00)
-**Na tela:** trecho de `CREATE TABLE` + `ALTER TABLE ... FOREIGN KEY` e contagem da carga (19 produtos, 15 comandas...).
+**Na tela:** trecho de `CREATE TABLE` + `ALTER TABLE ... FOREIGN KEY` e contagem da carga (19 produtos, 16 comandas...).
 **Falar:** o script roda várias vezes; `UPDATE` e `DELETE` de exemplo no próprio script.
+
+### Slide 7b — Procedures e transações (incluir dentro do slide 7, 0:30)
+**Na tela:** trecho de `sp_registrar_pagamento` (`START TRANSACTION`, `SIGNAL`, `COMMIT`/`ROLLBACK`).
+**Falar:** "a API é opcional no enunciado, mas as regras críticas também estão no banco, em transação: pagamento e fechamento da comanda acontecem juntos ou não acontecem."
 
 ### Slide 8 — Consultas DQL (1:00)
 **Na tela:** 2 consultas — relatório por período com `JOIN` e faturamento por mês com `GROUP BY` + `HAVING`; mencionar view e ranking com subconsulta.
@@ -83,7 +87,7 @@
 8. **Sair e entrar como administrador** (`admin@a3.local`). Mostre a aba *usuarios*.
 9. **CRUD genérico:** aba *produtos* → busca "cerveja", ordenar por valor, *Novo registro* (mostrar validação de campo obrigatório), criar, editar, excluir. Tente excluir um produto com vendas → 409 ("não pode, tem vínculos").
 10. **Relatórios:** faturamento mensal; produtos mais vendidos com período; saldo devedor do fiado. *Fale:* "são os SELECT com JOIN do script".
-11. **(Opcional)** No phpMyAdmin, mostre a tabela `itens_comanda` e `valor_unitario`.
+11. **(Opcional)** No phpMyAdmin, mostre `valor_unitario` e execute `CALL sp_registrar_pagamento(16, 3, 'pix', 1.00);` — falha com mensagem e sem alterar dados (rollback).
 
 **Plano B se algo falhar:** recarregue a página (o token fica na aba); se a API não responder, confira o Apache/MySQL; mantenha prints
 de cada tela em um slide de reserva e a collection do Postman aberta.

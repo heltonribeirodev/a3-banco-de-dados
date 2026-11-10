@@ -52,6 +52,12 @@ Um conjunto de operações que ocorre por inteiro ou não ocorre (atomicidade; A
 **15. Para que servem `CHECK` e `ENUM`? Há desvantagens?**
 Validam o dado dentro do banco (valor ≥ 0; status só dos valores permitidos), independentemente da aplicação. Desvantagem do `ENUM`: acrescentar valor exige `ALTER TABLE`. `CHECK` só é aplicado de fato no MySQL 8.0.16+ e no MariaDB 10.2+.
 
+**14b. O que é uma procedure e por que usá-la com transação?**
+Um bloco de código SQL guardado no banco e chamado com `CALL`. Com transação, uma operação de vários passos (inserir pagamento e fechar a comanda) vira atômica. As regras são verificadas com `SIGNAL`, e um `EXIT HANDLER` faz `ROLLBACK` se algo falhar. O professor avisou que a API é opcional; mesmo assim, as procedures garantem as regras direto no banco.
+
+**14c. Para que serve o `FOR UPDATE`?**
+Trava a linha da comanda até o fim da transação; assim, dois pagamentos simultâneos não leem o mesmo saldo e o ultrapassam.
+
 ### API, segurança e REST
 
 **16. O que é REST?**

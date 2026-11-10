@@ -61,6 +61,11 @@ Decisões de modelagem:
 - O InnoDB já cria um índice para cada chave estrangeira; por isso não há índice extra em `pagamentos(comanda_id)`.
   Foram criados apenas índices que as chaves não cobrem (`comandas(status, aberta_em)`, `produtos(nome)`, `pagamentos(pago_em)`).
 
+O script também traz **3 procedures com transação** (`sp_adicionar_item`, `sp_registrar_pagamento`, `sp_cancelar_comanda`),
+com `START TRANSACTION`, `ROLLBACK` em caso de erro e regras verificadas com `SIGNAL`. O uso de API é opcional no enunciado
+(aviso de 04/11/2026); o projeto mantém a API **e** as procedures. Exemplo no MySQL:
+`CALL sp_registrar_pagamento(10, 2, 'pix', 10.00);`
+
 O script `.sql` traz as consultas DQL Q1 a Q12 (JOINs, período, GROUP BY/HAVING, subconsultas e uso da view).
 
 ## API REST

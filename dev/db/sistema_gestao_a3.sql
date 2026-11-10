@@ -152,6 +152,108 @@ SELECT c.id AS comanda_id,
                    FROM pagamentos p WHERE p.comanda_id = c.id), 0)    AS pago
   FROM comandas c;
 
+-- ---------------------------------------------------------------------
+-- 1.1) PROCEDURES COM TRANSAÇÃO
+-- Cada procedure executa uma operação completa do negócio dentro de uma
+-- transação: ou tudo é gravado (COMMIT) ou nada é (ROLLBACK). As regras de
+-- negócio são verificadas com SIGNAL, que interrompe a operação com uma
+-- mensagem de erro. O SELECT ... FOR UPDATE trava a comanda enquanto a
+-- transação está aberta, evitando que dois pagamentos simultâneos passem do saldo.
+-- ---------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS sp_adicionar_item;
+DROP PROCEDURE IF EXISTS sp_registrar_pagamento;
+DROP PROCEDURE IF EXISTS sp_cancelar_comanda;
+
+DELIMITER $$
+
+-- Lança um item em uma comanda aberta, usando o preço atual do produto.
+CREATE PROCEDURE sp_adicionar_item(IN p_comanda INT UNSIGNED, IN p_produto INT UNSIGNED, IN p_qtd INT UNSIGNED)
+BEGIN
+  DECLARE v_status VARCHAR(20) DEFAULT NULL;
+  DECLARE v_valor  DECIMAL(10,2);
+  DECLARE v_ativo  TINYINT DEFAULT NULL;
+  -- qualquer erro desfaz a transação e é repassado a quem chamou
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+
+  START TRANSACTION;
+  SELECT status INTO v_status FROM comandas WHERE id = p_comanda FOR UPDATE;
+  IF v_status IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda não encontrada.';
+  END IF;
+  IF v_status <> 'aberta' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Só é possível alterar itens de comanda aberta.';
+  END IF;
+  SELECT valor, ativo INTO v_valor, v_ativo FROM produtos WHERE id = p_produto;
+  IF v_ativo IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Produto não encontrado.';
+  END IF;
+  IF v_ativo = 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Produto inativo não pode ser vendido.';
+  END IF;
+  INSERT INTO itens_comanda (comanda_id, produto_id, quantidade, valor_unitario)
+  VALUES (p_comanda, p_produto, p_qtd, v_valor);
+  COMMIT;
+END$$
+
+-- Registra um pagamento (a comanda pode ter vários: pagamento dividido).
+-- Se o pagamento cobre todo o saldo, a comanda é fechada na mesma transação.
+CREATE PROCEDURE sp_registrar_pagamento(IN p_comanda INT UNSIGNED, IN p_usuario INT UNSIGNED,
+                                        IN p_metodo VARCHAR(20), IN p_valor DECIMAL(10,2))
+BEGIN
+  DECLARE v_status VARCHAR(20) DEFAULT NULL;
+  DECLARE v_total  DECIMAL(10,2);
+  DECLARE v_pago   DECIMAL(10,2);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+
+  START TRANSACTION;
+  SELECT status INTO v_status FROM comandas WHERE id = p_comanda FOR UPDATE;
+  IF v_status IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda não encontrada.';
+  END IF;
+  IF v_status NOT IN ('aberta', 'fiado') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Não é possível pagar uma comanda fechada ou cancelada.';
+  END IF;
+  SELECT total, pago INTO v_total, v_pago FROM vw_resumo_comandas WHERE comanda_id = p_comanda;
+  IF v_total <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A comanda não possui itens.';
+  END IF;
+  IF p_valor > v_total - v_pago THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O valor excede o saldo da comanda.';
+  END IF;
+
+  INSERT INTO pagamentos (comanda_id, usuario_id, metodo, valor) VALUES (p_comanda, p_usuario, p_metodo, p_valor);
+  IF p_valor = v_total - v_pago THEN
+    UPDATE comandas SET status = 'fechada', fechada_em = NOW() WHERE id = p_comanda;
+  END IF;
+  COMMIT;
+  SELECT status, total, pago FROM vw_resumo_comandas WHERE comanda_id = p_comanda;
+END$$
+
+-- Cancela uma comanda que ainda não recebeu nenhum pagamento.
+CREATE PROCEDURE sp_cancelar_comanda(IN p_comanda INT UNSIGNED)
+BEGIN
+  DECLARE v_status VARCHAR(20) DEFAULT NULL;
+  DECLARE v_pagos  INT;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+
+  START TRANSACTION;
+  SELECT status INTO v_status FROM comandas WHERE id = p_comanda FOR UPDATE;
+  IF v_status IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda não encontrada.';
+  END IF;
+  IF v_status NOT IN ('aberta', 'fiado') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Só comandas abertas ou em fiado podem ser canceladas.';
+  END IF;
+  SELECT COUNT(*) INTO v_pagos FROM pagamentos WHERE comanda_id = p_comanda;
+  IF v_pagos > 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda com pagamentos não pode ser cancelada.';
+  END IF;
+  UPDATE comandas SET status = 'cancelada', fechada_em = NOW() WHERE id = p_comanda;
+  COMMIT;
+END$$
+
+DELIMITER ;
+
 -- =====================================================================
 -- 2) DML - carga inicial com dados fictícios para homologação
 -- =====================================================================
@@ -271,6 +373,18 @@ INSERT INTO pagamentos (id, comanda_id, usuario_id, metodo, valor, pago_em) VALU
   (11, 13, 2, 'pix', 73.00, '2026-09-18 20:10:00'),
   (12, 14, 3, 'cartao_credito', 37.00, '2026-09-27 22:40:00'),
   (13, 15, 2, 'pix', 79.00, '2026-11-02 19:30:00');
+
+-- Uso das procedures (transações): uma comanda nova é atendida por inteiro por elas.
+-- Comanda 16 aberta por Pedro (usuário 3) para Juliana (cliente 8).
+INSERT INTO comandas (id, cliente_id, usuario_id, status, aberta_em) VALUES (16, 8, 3, 'aberta', '2026-11-05 20:00:00');
+CALL sp_adicionar_item(16, 2, 2);                       -- 2 Long Neck  = 17,00
+CALL sp_adicionar_item(16, 8, 1);                       -- 1 Fritas     = 25,00 (total 42,00)
+CALL sp_registrar_pagamento(16, 3, 'pix', 20.00);       -- pagamento parcial: comanda continua aberta
+CALL sp_registrar_pagamento(16, 3, 'dinheiro', 22.00);  -- quita o saldo: a comanda é fechada
+-- Exemplos que devem FALHAR (descomente um por vez; a transação sofre ROLLBACK):
+-- CALL sp_registrar_pagamento(16, 3, 'pix', 1.00);     -- erro: comanda fechada
+-- CALL sp_adicionar_item(16, 2, 1);                    -- erro: só em comanda aberta
+-- CALL sp_cancelar_comanda(5);                         -- erro: comanda com pagamentos
 
 -- Ajustes de exemplo executados após a carga (UPDATE e DELETE)
 -- Reajuste do preço da cerveja lata: as comandas antigas mantêm o valor

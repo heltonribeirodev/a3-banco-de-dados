@@ -237,8 +237,9 @@ O script é executável do início ao fim e pode ser rodado várias vezes: ele c
 
 ### 6.2 DML
 
-- `INSERT`: carga fictícia de 7 categorias, 19 produtos, 8 clientes, 4 usuários, 15 comandas (de setembro a novembro de 2026),
-  30 itens e 13 pagamentos. Há comandas em todas as situações (aberta, fechada, fiado, cancelada) e pagamentos divididos.
+- `INSERT`: carga fictícia de 7 categorias, 19 produtos, 8 clientes, 4 usuários, 16 comandas (de setembro a novembro de 2026),
+  32 itens e 15 pagamentos. Há comandas em todas as situações (aberta, fechada, fiado, cancelada) e pagamentos divididos.
+- `CALL`: uso das procedures da seção 6.4 para atender a comanda 16 (itens e pagamento dividido).
 - `UPDATE`: reajuste de preço de um produto, inativação de um produto e correção do telefone de um cliente.
 - `DELETE`: exclusão de um cliente duplicado cadastrado por engano.
 
@@ -259,7 +260,24 @@ O script é executável do início ao fim e pode ser rodado várias vezes: ele c
 | Q11 | Ranking de clientes | subconsulta na cláusula `FROM`, subconsulta escalar e `RANK()` |
 | Q12 | Situação financeira por status | consulta sobre a view |
 
-## 7. API REST
+### 6.4 Procedures e transações
+
+Conforme o aviso do professor (04/11/2026), o uso de API é **opcional**; quem não usa API deve implementar *procedures* com
+transações. O projeto tem **as duas coisas**: a API (seção 7) e três procedures no próprio script, de modo que as operações
+críticas também funcionam diretamente no banco.
+
+| Procedure | O que faz | Regras verificadas (`SIGNAL`) |
+|---|---|---|
+| `sp_adicionar_item(comanda, produto, qtd)` | lança item com o preço atual do produto | comanda existe e está aberta; produto existe e está ativo |
+| `sp_registrar_pagamento(comanda, usuario, metodo, valor)` | grava o pagamento e fecha a comanda se o saldo for coberto | comanda aberta ou fiado; tem itens; valor não excede o saldo |
+| `sp_cancelar_comanda(comanda)` | cancela a comanda | aberta ou fiado; sem pagamentos |
+
+Cada procedure usa `START TRANSACTION` ... `COMMIT`; um `EXIT HANDLER FOR SQLEXCEPTION` executa `ROLLBACK` e repassa o erro (`RESIGNAL`).
+O `SELECT ... FOR UPDATE` trava a linha da comanda durante a transação, impedindo que dois pagamentos simultâneos ultrapassem o saldo.
+Em `sp_registrar_pagamento`, a inserção do pagamento e o fechamento da comanda são **atômicos**: ou ocorrem os dois, ou nenhum.
+Exemplo de falha: `CALL sp_registrar_pagamento(16, 3, 'pix', 1.00);` → "Não é possível pagar uma comanda fechada ou cancelada", sem alterar nada.
+
+## 7. API REST (opcional no enunciado, implementada)
 
 Código em `dev/api/v1/`. Uma única classe genérica (`Resource`) implementa o ciclo `GET` / `POST` / `PUT` / `DELETE`,
 validação, paginação, filtros e ordenação; cada tabela é uma subclasse que declara apenas seus campos, filtros, permissões e
