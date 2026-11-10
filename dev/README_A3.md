@@ -12,6 +12,7 @@ dev/
   assets/            default.png (imagem padrão), logo.png e uploads/ (imagens dos produtos)
   db/                sistema_gestao_a3.sql (DDL + DML + DQL) e DER (.mmd e .png)
   prototipo/         interface oficial (index.html, css/estilo.css, js/*.js)
+  postman/           collection do Postman (material extra, opcional)
   tests/             teste_api.php (testes automatizados da API)
   legado/            sistema antigo, mantido apenas como histórico
   README_A3.md       este arquivo
