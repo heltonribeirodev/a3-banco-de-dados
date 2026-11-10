@@ -1,4 +1,4 @@
-# Projeto A3 — Pendências e acessos (para a equipe)
+# Projeto A3 — Acessos e informações (para a equipe)
 
 **Entrega:** 28/11/2026 às 23:59 (Classroom; só **um** integrante envia) · **Apresentação:** 01/12/2026 (15 a 20 min)
 **Repositório:** branch `a3-finalizacao` · **Resumo técnico:** `dev/README_A3.md`
@@ -38,12 +38,12 @@ Banco de dados (XAMPP padrão): usuário `root`, **sem senha** (configurado em `
 - API REST com GET/POST/PUT/DELETE nas 7 tabelas, JWT, permissões e 7 relatórios.
 - Protótipo: login, CRUD, comandas (itens, pagamento dividido, fiado, cancelar), relatórios, responsivo.
 - Testes: `C:\xampp\php\php.exe dev\tests\teste_api.php` → 74 verificações, 0 falhas.
-- Rascunhos em `docs/`: relatório técnico, roteiro da apresentação, perguntas da banca.
-- Collection do Postman (opcional): `dev/postman/`.
+- Rascunhos em `docs/`: `relatorio_tecnico.md`, `apresentacao_roteiro.md` e `perguntas_banca.md`.
+- Collection do Postman (opcional): `dev/postman/` — testada no Runner: 50 de 50 testes passaram.
 
 ## 4. O que FALTA (checklist)
 
-Preencha o responsável e a data de cada item.
+Preencham o responsável e a data de cada item. (A API e o protótipo já foram testados; o que resta é a parte de documentação, apresentação e entrega.)
 
 | # | Tarefa | Responsável | Prazo | Feito |
 |---|---|---|---|---|
@@ -76,6 +76,6 @@ Preencha o responsável e a data de cada item.
 |---|---|
 | Página não abre ou a API não responde | Conferir se Apache e MySQL estão ligados no XAMPP |
 | Login recusado | Reimportar o `.sql`; usar a senha `Senha@123`; `lucas@a3.local` é inativo de propósito |
-| Dados bagunçados após a demonstração | Reimportar `dev/db/sistema_gestao_a3.sql` |
+| Dados bagunçados após a demonstração (ou ids muito altos) | Reimportar `dev/db/sistema_gestao_a3.sql` |
 | Tela mostrando algo estranho | Recarregar a página (Ctrl+F5) |
 | Rotas da API dão 404 | Usar `.../api/v1/index.php/produtos` (sem o `mod_rewrite`) |
