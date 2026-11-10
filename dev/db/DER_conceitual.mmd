@@ -1,0 +1,32 @@
+erDiagram
+    direction LR
+    CATEGORIA   ||--o{ PRODUTO     : "classifica"
+    PRODUTO     ||--o{ ITEM_COMANDA: "é vendido em"
+    COMANDA     ||--|{ ITEM_COMANDA: "contém"
+    CLIENTE     ||--o{ COMANDA     : "consome"
+    USUARIO     ||--o{ COMANDA     : "abre"
+    COMANDA     ||--o{ PAGAMENTO   : "é quitada por"
+    USUARIO     ||--o{ PAGAMENTO   : "recebe"
+
+    USUARIO { int id PK
+              string nome
+              string email
+              string perfil }
+    CLIENTE { int id PK
+              string nome
+              string telefone }
+    CATEGORIA { int id PK
+                string nome }
+    PRODUTO { int id PK
+              string nome
+              decimal valor }
+    COMANDA { int id PK
+              string status
+              datetime aberta_em }
+    ITEM_COMANDA { int id PK
+                   int quantidade
+                   decimal valor_unitario }
+    PAGAMENTO { int id PK
+                string metodo
+                decimal valor
+                datetime pago_em }

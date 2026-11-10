@@ -1,0 +1,61 @@
+erDiagram
+    direction LR
+    categorias ||--o{ produtos : "categoria_id (RESTRICT)"
+    clientes ||--o{ comandas : "cliente_id"
+    usuarios ||--o{ comandas : "usuario_id"
+    comandas ||--|{ itens_comanda : "comanda_id (CASCADE)"
+    produtos ||--o{ itens_comanda : "produto_id (RESTRICT)"
+    comandas ||--o{ pagamentos : "comanda_id (RESTRICT)"
+    usuarios ||--o{ pagamentos : "usuario_id (RESTRICT)"
+
+    usuarios {
+        INT id PK
+        VARCHAR nome
+        VARCHAR email UK
+        VARCHAR senha_hash
+        ENUM perfil "admin, atendente"
+        ENUM status_conta "ativo, inativo"
+        DATETIME criado_em
+    }
+    clientes {
+        INT id PK
+        VARCHAR nome
+        VARCHAR telefone "NULL"
+        DATETIME criado_em
+    }
+    categorias {
+        INT id PK
+        VARCHAR nome UK
+    }
+    produtos {
+        INT id PK
+        INT categoria_id FK
+        VARCHAR nome
+        DECIMAL valor "CHECK >= 0"
+        VARCHAR imagem
+        TINYINT ativo
+        DATETIME criado_em
+    }
+    comandas {
+        INT id PK
+        INT cliente_id FK
+        INT usuario_id FK
+        ENUM status "aberta, fechada, fiado, cancelada"
+        DATETIME aberta_em
+        DATETIME fechada_em "NULL"
+    }
+    itens_comanda {
+        INT id PK
+        INT comanda_id FK
+        INT produto_id FK
+        INT quantidade "CHECK > 0"
+        DECIMAL valor_unitario "CHECK >= 0"
+    }
+    pagamentos {
+        INT id PK
+        INT comanda_id FK
+        INT usuario_id FK
+        ENUM metodo "pix, dinheiro, cartao_credito, cartao_debito"
+        DECIMAL valor "CHECK > 0"
+        DATETIME pago_em
+    }
