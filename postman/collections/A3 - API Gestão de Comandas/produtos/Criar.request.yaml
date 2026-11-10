@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base}}/produtos"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "categoria_id": 1,
+      "nome": "Produto Postman",
+      "valor": 9.9,
+      "imagem": "assets/default.png"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 201', () => pm.response.to.have.status(201));
+      pm.collectionVariables.set('id_produto', pm.response.json().dados.id);
+    language: text/javascript
+order: 2000

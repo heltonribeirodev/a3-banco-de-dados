@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{base}}/categorias/{{id_categoria}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nome": "Categoria Postman B"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 4000

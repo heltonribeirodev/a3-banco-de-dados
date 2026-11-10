@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base}}/comandas"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "cliente_id": 1
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 201', () => pm.response.to.have.status(201));
+      pm.collectionVariables.set('id_comanda', pm.response.json().dados.id);
+    language: text/javascript
+order: 2000

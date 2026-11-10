@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base}}/usuarios/{{id_usuario}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nome": "Usuário Postman B",
+      "email": "postman@a3.local",
+      "perfil": "atendente"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 4000

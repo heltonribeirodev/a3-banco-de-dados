@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base}}/itens_comanda/{{id_item}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "produto_id": 1,
+      "quantidade": 3
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 5000

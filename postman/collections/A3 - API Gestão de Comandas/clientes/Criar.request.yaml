@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base}}/clientes"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nome": "Cliente Postman",
+      "telefone": "(41) 90000-0000"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 201', () => pm.response.to.have.status(201));
+      pm.collectionVariables.set('id_cliente', pm.response.json().dados.id);
+    language: text/javascript
+order: 2000

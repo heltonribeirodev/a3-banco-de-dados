@@ -1,0 +1,18 @@
+$kind: collection
+description: Execute no Runner, na ordem. A pasta 0 faz o login e guarda o token em {{token}}.
+variables:
+  base: http://localhost/gestao-comandas-a3/dev/api/v1
+  token: ""
+  id_categoria: ""
+  id_produto: ""
+  id_cliente: ""
+  id_usuario: ""
+  id_comanda: ""
+  id_item: ""
+  id_pagamento: ""
+auth:
+  - id: c0145e5b-2ca5-4ade-a78e-238c9fb3cce0
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{token}}"

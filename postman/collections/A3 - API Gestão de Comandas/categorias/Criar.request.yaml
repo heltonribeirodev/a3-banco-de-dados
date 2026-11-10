@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base}}/categorias"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nome": "Categoria Postman"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 201', () => pm.response.to.have.status(201));
+      pm.collectionVariables.set('id_categoria', pm.response.json().dados.id);
+    language: text/javascript
+order: 2000

@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base}}/pagamentos/{{id_pagamento}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "metodo": "dinheiro",
+      "valor": 6
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 7000

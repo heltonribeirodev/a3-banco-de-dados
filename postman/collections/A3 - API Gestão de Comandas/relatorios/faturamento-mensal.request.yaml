@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{base}}/relatorios/faturamento-mensal?minimo=100"
+method: GET
+queryParams:
+  minimo: "100"
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 7000

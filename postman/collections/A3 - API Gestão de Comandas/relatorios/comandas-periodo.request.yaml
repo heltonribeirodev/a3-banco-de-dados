@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base}}/relatorios/comandas-periodo?data_inicio=2026-10-01&data_fim=2026-10-15"
+method: GET
+queryParams:
+  data_inicio: 2026-10-01
+  data_fim: 2026-10-15
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 1000

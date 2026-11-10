@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base}}/produtos/{{id_produto}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "categoria_id": 1,
+      "nome": "Produto Postman",
+      "valor": 11,
+      "ativo": true
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 4000

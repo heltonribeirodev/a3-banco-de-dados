@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base}}/produtos?q=cerveja&ordem=valor&direcao=desc"
+method: GET
+queryParams:
+  q: cerveja
+  ordem: valor
+  direcao: desc
+scripts:
+  - type: afterResponse
+    code: pm.test('Status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 1000
