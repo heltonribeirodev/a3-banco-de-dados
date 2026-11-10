@@ -15,7 +15,8 @@ abstract class Resource
      * Campos aceitos no corpo da requisição.
      * Chaves de cada campo: tipo (int|string|decimal|bool|enum|email|datetime|fk),
      * obrigatorio, obrigatorioCriacao, max, min, valores (enum), tabela (fk),
-     * somenteCriacao (não muda no PUT), virtual (não é coluna), descricao.
+     * somenteCriacao (não muda no PUT), virtual (não é coluna), anulavel (PUT com
+     * null/"" grava NULL), descricao.
      */
     protected array $campos = [];
 
@@ -220,8 +221,11 @@ abstract class Resource
         $where = []; $params = [];
         foreach ($this->filtros as $chave => [$coluna, $op]) {
             if (!isset($query[$chave]) || $query[$chave] === '') { continue; }
+            $valor = (string)$query[$chave];
+            // data_fim recebida só com a data (AAAA-MM-DD) vale até o fim do dia
+            if ($chave === 'data_fim' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor)) { $valor .= ' 23:59:59'; }
             $where[]  = "$coluna $op ?";
-            $params[] = $op === 'LIKE' ? '%' . $query[$chave] . '%' : $query[$chave];
+            $params[] = $op === 'LIKE' ? '%' . $valor . '%' : $valor;
         }
         return [$where, $params];
     }
@@ -246,6 +250,8 @@ abstract class Resource
 
             $presente = array_key_exists($nome, $corpo) && $corpo[$nome] !== null && $corpo[$nome] !== '';
             if (!$presente) {
+                // campo opcional marcado como "anulavel": enviar null/"" no PUT limpa o valor
+                if (!$criacao && !empty($c['anulavel']) && array_key_exists($nome, $corpo)) { $dados[$nome] = null; continue; }
                 $obrig = !empty($c['obrigatorio']) || ($criacao && !empty($c['obrigatorioCriacao']));
                 if ($obrig) { $erros[$nome] = 'Campo obrigatório.'; }
                 continue;

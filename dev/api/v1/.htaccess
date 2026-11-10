@@ -1,7 +1,9 @@
-# Redireciona todas as rotas amigáveis (/produtos/3) para o index.php
 RewriteEngine On
+# Bloqueia o acesso web ao código interno, à configuração e ao segredo do JWT
+RewriteRule ^(config\.php|\.jwt_secret|src/) - [F,L]
 # Repassa o cabeçalho Authorization ao PHP (necessário no Apache/XAMPP)
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+# Redireciona todas as rotas amigáveis (/produtos/3) para o index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]

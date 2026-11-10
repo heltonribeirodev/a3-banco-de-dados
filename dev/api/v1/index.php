@@ -5,7 +5,8 @@
  * Ponto de entrada único (front controller). Rotas:
  *   POST /auth/login            -> autenticação (retorna token JWT)
  *   GET  /auth/me               -> usuário autenticado
- *   GET  /                      -> documentação dos recursos
+ *   GET  /                      -> documentação dos recursos e relatórios
+ *   GET  /relatorios/{nome}     -> relatórios (somente leitura, exige token)
  *   GET|POST     /{recurso}     -> listar | criar
  *   GET|PUT|DELETE /{recurso}/{id} -> consultar | atualizar | excluir
  */
@@ -20,10 +21,15 @@ spl_autoload_register(function (string $classe): void {
 require_once __DIR__ . '/src/Http.php';       // Request e Response
 require_once __DIR__ . '/src/ApiException.php';
 
-// CORS liberado para facilitar o protótipo em outra origem durante o desenvolvimento
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Headers: Authorization, Content-Type');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+// CORS: só as origens configuradas em config.php (padrão: localhost) podem usar a API
+// a partir de outra página no navegador. O protótipo fica no mesmo servidor.
+$origem = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origem !== '' && in_array($origem, (require __DIR__ . '/config.php')['cors'], true)) {
+    header("Access-Control-Allow-Origin: $origem");
+    header('Vary: Origin');
+    header('Access-Control-Allow-Headers: Authorization, Content-Type');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+}
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { Response::json(204); }
 
 $recursos = [];
@@ -41,7 +47,8 @@ try {
         if ($req->metodo !== 'GET') { throw new ApiException(405, 'Método não permitido.'); }
         $doc = [];
         foreach ($recursos as $nome => $classe) { $doc[$nome] = (new $classe())->descricao(); }
-        Response::json(200, ['api' => 'Gestão de Comandas - A3', 'versao' => '1.0', 'autenticacao' => 'Bearer (JWT)', 'recursos' => $doc]);
+        Response::json(200, ['api' => 'Gestão de Comandas - A3', 'versao' => '1.1', 'autenticacao' => 'Bearer (JWT)',
+            'recursos' => $doc, 'relatorios' => Relatorios::descricao()]);
     }
 
     // ---- Autenticação ----
@@ -49,6 +56,14 @@ try {
         if (($seg[1] ?? '') === 'login' && $req->metodo === 'POST') { Response::json(200, Auth::login($req->corpo)); }
         if (($seg[1] ?? '') === 'me' && $req->metodo === 'GET')     { Response::json(200, ['dados' => Auth::usuario($req)]); }
         throw new ApiException(404, 'Rota de autenticação não encontrada.');
+    }
+
+    // ---- Relatórios (somente leitura; exigem token) ----
+    if ($seg[0] === 'relatorios') {
+        $usuario = Auth::usuario($req);
+        if ($req->metodo !== 'GET') { throw new ApiException(405, 'Relatórios aceitam somente GET.'); }
+        if (!isset($seg[1]) || isset($seg[2])) { throw new ApiException(404, 'Informe o relatório: GET /relatorios/{nome}.'); }
+        Response::json(200, Relatorios::executar($seg[1], $req->query));
     }
 
     // ---- Recursos (todos exigem token) ----
