@@ -1,0 +1,107 @@
+/* Estilos do protótipo A3. Sem dependências externas. */
+:root {
+  --bg: #f4f6f8; --card: #fff; --borda: #d9dee3; --txt: #1f2933; --suave: #6b7785;
+  --azul: #1d4ed8; --verm: #b91c1c; --verde: #15803d; --amarelo: #92400e;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--txt); }
+[hidden] { display: none !important; }
+
+/* Cabeçalho e indicador de carregamento */
+header { background: #111827; color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+header small { color: #9ca3af; font-weight: 400; margin-left: 6px; }
+.usuario button { background: transparent; color: #fff; border-color: #4b5563; }
+.usuario button:hover:not(:disabled) { background: #1f2937; }
+.usuario { display: flex; align-items: center; gap: 10px; color: #d1d5db; }
+#carregando { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--azul); color: #fff; text-align: center; font-size: 12px; padding: 2px; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+#app { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--borda); border-radius: 8px; padding: 16px; }
+h2 { margin: 0 0 12px; font-size: 15px; }
+h3 { margin: 18px 0 8px; font-size: 14px; }
+code { background: #eef1f4; padding: 1px 5px; border-radius: 4px; }
+.suave { color: var(--suave); }
+
+/* Formulários e botões */
+label { display: block; font-weight: 600; margin: 10px 0 4px; font-size: 13px; }
+label small { font-weight: 400; color: var(--suave); }
+input, select { width: 100%; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 6px; font: inherit; background: #fff; color: inherit; }
+input.invalido, select.invalido { border-color: var(--verm); background: #fff5f5; }
+.erro-campo { color: var(--verm); font-size: 12px; margin-top: 3px; }
+button { padding: 8px 14px; border: 1px solid var(--borda); border-radius: 6px; background: #fff; font: inherit; cursor: pointer; color: inherit; }
+button:hover:not(:disabled) { background: #f3f4f6; }
+button.pri { background: var(--azul); border-color: var(--azul); color: #fff; }
+button.pri:hover:not(:disabled) { background: #1e40af; }
+button.perigo { color: var(--verm); border-color: #f1c0c0; }
+button.peq { padding: 4px 9px; font-size: 12px; }
+button:disabled { opacity: .5; cursor: default; }
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
+.alinha-fim { align-self: end; }
+.botoes { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Abas */
+.abas { display: flex; gap: 6px; padding: 10px; overflow-x: auto; }
+.abas button { white-space: nowrap; }
+.abas button.ativa { background: #e8eefc; border-color: var(--azul); color: var(--azul); font-weight: 600; }
+
+/* Barras, filtros e tabelas */
+.barra { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.barra h2 { margin: 0; }
+.filtros { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
+.filtros > div { min-width: 140px; flex: 1 1 140px; }
+.filtros-int { display: contents; }
+.filtros label { margin-top: 0; }
+.tab { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--borda); white-space: nowrap; }
+th { background: #f9fafb; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--suave); }
+th.ord { cursor: pointer; user-select: none; }
+th.ord:hover { color: var(--azul); }
+td.num, th.num { text-align: right; }
+td.acoes button + button { margin-left: 6px; }
+.miniatura { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--borda); vertical-align: middle; }
+.rodape { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; color: var(--suave); }
+
+/* Mensagens */
+.msg { padding: 8px 12px; border-radius: 6px; margin: 10px 0; }
+.msg.erro { background: #fdecec; color: var(--verm); }
+.msg.ok { background: #e7f6ec; color: var(--verde); }
+.msg.aviso { background: #fef3c7; color: var(--amarelo); }
+
+/* Status das comandas */
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+.badge.aberta { background: #dbeafe; color: #1e40af; }
+.badge.fechada { background: #dcfce7; color: #166534; }
+.badge.fiado { background: #fef3c7; color: #92400e; }
+.badge.cancelada { background: #fee2e2; color: #991b1b; }
+
+/* Detalhe da comanda */
+.resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+.resumo div { border: 1px solid var(--borda); border-radius: 8px; padding: 10px 12px; }
+.resumo span { display: block; font-size: 12px; color: var(--suave); }
+.resumo strong { font-size: 18px; }
+
+/* Painel de log */
+summary { cursor: pointer; font-weight: 600; }
+pre { margin: 8px 0 0; background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 6px; overflow: auto; max-height: 260px; font-size: 12px; }
+.reqlinha { margin-top: 8px; word-break: break-all; }
+.reqlinha b { padding: 2px 7px; border-radius: 4px; color: #fff; font-size: 12px; }
+.reqlinha .st { font-weight: 600; color: var(--verde); } .reqlinha .st.ruim { color: var(--verm); }
+.GET { background: #0e7490; } .POST { background: #15803d; } .PUT { background: #b45309; } .DELETE { background: #b91c1c; }
+
+/* Janelas (dialog) */
+dialog { border: 1px solid var(--borda); border-radius: 10px; padding: 18px; width: min(560px, 94vw); max-height: 92vh; overflow: auto; }
+dialog::backdrop { background: rgba(15, 23, 42, .5); }
+
+/* Celular */
+@media (max-width: 640px) {
+  main { padding: 10px; gap: 10px; }
+  .card { padding: 12px; }
+  header { padding: 10px 12px; }
+  header small { display: block; margin: 0; }
+  .filtros > div { flex-basis: 45%; }
+  th, td { padding: 6px 8px; }
+  .rodape { justify-content: space-between; }
+}

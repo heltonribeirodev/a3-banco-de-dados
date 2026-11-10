@@ -52,6 +52,7 @@ abstract class Resource
         return [
             'campos'     => $this->campos,
             'filtros'    => array_keys($this->filtros),
+            'ordenaveis' => $this->ordenaveis,
             'permissoes' => $this->permissoes,
         ];
     }
