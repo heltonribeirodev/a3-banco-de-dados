@@ -11,18 +11,25 @@ erDiagram
     USUARIO { int id PK
               string nome
               string email
-              string perfil }
+              string perfil
+              string status_conta
+              datetime criado_em }
     CLIENTE { int id PK
               string nome
-              string telefone }
+              string telefone
+              datetime criado_em }
     CATEGORIA { int id PK
                 string nome }
     PRODUTO { int id PK
               string nome
-              decimal valor }
+              decimal valor
+              string imagem
+              boolean ativo
+              datetime criado_em }
     COMANDA { int id PK
               string status
-              datetime aberta_em }
+              datetime aberta_em
+              datetime fechada_em }
     ITEM_COMANDA { int id PK
                    int quantidade
                    decimal valor_unitario }

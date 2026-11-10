@@ -134,9 +134,12 @@ ALTER TABLE pagamentos
   ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- Índices de apoio às consultas e filtros mais frequentes
-ALTER TABLE comandas       ADD INDEX idx_comandas_status_data (status, aberta_em);
-ALTER TABLE produtos       ADD INDEX idx_produtos_nome (nome);
-ALTER TABLE itens_comanda  ADD INDEX idx_itens_comanda (comanda_id);
+-- Observação: o InnoDB já cria automaticamente um índice para cada chave
+-- estrangeira (ex.: pagamentos.comanda_id, itens_comanda.comanda_id). Por isso
+-- NÃO se cria um índice extra nessas colunas: seria redundante.
+ALTER TABLE comandas   ADD INDEX idx_comandas_status_data (status, aberta_em); -- filtros por status e período
+ALTER TABLE produtos   ADD INDEX idx_produtos_nome (nome);                      -- busca por nome
+ALTER TABLE pagamentos ADD INDEX idx_pagamentos_pago_em (pago_em);              -- relatórios por período
 
 -- Visão com o total de cada comanda (soma dos itens) e o valor já pago
 CREATE VIEW vw_resumo_comandas AS
@@ -159,24 +162,30 @@ INSERT INTO categorias (id, nome) VALUES
   (3, 'Águas e Energéticos'),
   (4, 'Porções e Lanches'),
   (5, 'Salgadinhos e Doces'),
-  (6, 'Jogos');
+  (6, 'Jogos'),
+  (7, 'Destilados e Drinks');
 
 -- Produtos
 INSERT INTO produtos (id, categoria_id, nome, valor, imagem) VALUES
-  (1, 1, 'Cerveja Lata 350ml', 6.00, 'assets/uploads/cerveja-lata.jpg'),
-  (2, 1, 'Cerveja Long Neck', 8.50, 'assets/uploads/long-neck.jpg'),
-  (3, 1, 'Cerveja Garrafa 600ml', 12.00, 'assets/uploads/cerveja-600.jpg'),
-  (4, 2, 'Refrigerante Lata 350ml', 5.00, 'assets/uploads/refri-lata.jpg'),
-  (5, 2, 'Refrigerante 2L', 12.00, 'assets/uploads/refri-2l.jpg'),
-  (6, 3, 'Água Mineral 500ml', 3.50, 'assets/uploads/agua.jpg'),
-  (7, 3, 'Energético 473ml', 11.00, 'assets/uploads/energetico.jpg'),
-  (8, 4, 'Porção de Fritas', 25.00, 'assets/uploads/fritas.png'),
-  (9, 4, 'X-Bacon', 22.00, 'assets/uploads/x-bacon.png'),
-  (10, 4, 'Porção de Calabresa', 30.00, 'assets/uploads/calabresa.jpg'),
-  (11, 5, 'Salgadinho 60g', 7.00, 'assets/uploads/salgadinho.jpg'),
-  (12, 5, 'Chocolate em Barra', 6.50, 'assets/uploads/chocolate.jpg'),
-  (13, 6, 'Ficha de Sinuca', 2.00, 'assets/uploads/ficha-sinuca.webp'),
-  (14, 4, 'Petisco da Casa', 18.00, 'assets/default.png');
+  (1, 1, 'Cerveja Lata 350ml', 6.00, 'assets/default.png'),
+  (2, 1, 'Cerveja Long Neck', 8.50, 'assets/uploads/long-neck-sol-1780914669.webp'),
+  (3, 1, 'Cerveja Garrafa 600ml', 12.00, 'assets/uploads/brahma-garrafa-1780914618.jpg'),
+  (4, 2, 'Refrigerante Lata 350ml', 5.00, 'assets/default.png'),
+  (5, 2, 'Refrigerante 2L', 12.00, 'assets/uploads/sprite-2l-1780914972.jpg'),
+  (6, 3, 'Água Mineral 500ml', 3.50, 'assets/uploads/--gua-mineral-500ml-1780915049.jpg'),
+  (7, 3, 'Energético 473ml', 11.00, 'assets/uploads/monster-473ml-1780915205.png'),
+  (8, 4, 'Porção de Fritas', 25.00, 'assets/uploads/fritas--1780914501.png'),
+  (9, 4, 'X-Bacon', 22.00, 'assets/uploads/x-bacon-1780761286.png'),
+  (10, 4, 'Porção de Calabresa', 30.00, 'assets/default.png'),
+  (11, 5, 'Salgadinho 60g', 7.00, 'assets/uploads/doritos-1780914737.jpg'),
+  (12, 5, 'Chocolate em Barra', 6.50, 'assets/uploads/kitkat-1780914842.jpg'),
+  (13, 6, 'Ficha de Sinuca', 2.00, 'assets/uploads/ficha-de-sinuca-1780919445.webp'),
+  (14, 4, 'Petisco da Casa', 18.00, 'assets/default.png'),
+  (15, 1, 'Cerveja Litrão', 14.00, 'assets/uploads/brahma-litr--o-1780760328.png'),
+  (16, 2, 'Coca-Cola 1L', 9.00, 'assets/uploads/coca-cola-1l-1780914940.jpg'),
+  (17, 5, 'Cebolitos 60g', 6.50, 'assets/uploads/cebolitos-1780914779.jpg'),
+  (18, 7, 'Smirnoff 1L', 55.00, 'assets/uploads/smirnoff-1l-1780915114.jpg'),
+  (19, 7, 'Ice Big Apple', 12.00, 'assets/uploads/ice-kislla-big-apple-1780915250.jpg');
 
 -- Clientes
 INSERT INTO clientes (id, nome, telefone) VALUES
@@ -209,7 +218,10 @@ INSERT INTO comandas (id, cliente_id, usuario_id, status, aberta_em, fechada_em)
   (9, 1, 2, 'fechada', '2026-10-24 18:30:00', '2026-10-24 19:20:00'),
   (10, 2, 3, 'aberta', '2026-10-26 19:40:00', NULL),
   (11, 3, 2, 'aberta', '2026-10-28 20:05:00', NULL),
-  (12, 4, 3, 'cancelada', '2026-10-29 21:10:00', NULL);
+  (12, 4, 3, 'cancelada', '2026-10-29 21:10:00', NULL),
+  (13, 5, 2, 'fechada', '2026-09-18 19:00:00', '2026-09-18 20:10:00'),
+  (14, 6, 3, 'fechada', '2026-09-27 21:30:00', '2026-09-27 22:40:00'),
+  (15, 7, 2, 'fechada', '2026-11-02 18:20:00', '2026-11-02 19:30:00');
 
 -- Itens das comandas (valor_unitario guarda o preço praticado na venda)
 INSERT INTO itens_comanda (id, comanda_id, produto_id, quantidade, valor_unitario) VALUES
@@ -236,7 +248,13 @@ INSERT INTO itens_comanda (id, comanda_id, produto_id, quantidade, valor_unitari
   (21, 10, 9, 1, 22.00),
   (22, 11, 5, 1, 12.00),
   (23, 11, 8, 1, 25.00),
-  (24, 12, 4, 1, 5.00);
+  (24, 12, 4, 1, 5.00),
+  (25, 13, 3, 4, 12.00),
+  (26, 13, 8, 1, 25.00),
+  (27, 14, 15, 2, 14.00),
+  (28, 14, 16, 1, 9.00),
+  (29, 15, 18, 1, 55.00),
+  (30, 15, 19, 2, 12.00);
 
 -- Pagamentos (a comanda 5 está em fiado, com pagamento parcial)
 INSERT INTO pagamentos (id, comanda_id, usuario_id, metodo, valor, pago_em) VALUES
@@ -249,7 +267,10 @@ INSERT INTO pagamentos (id, comanda_id, usuario_id, metodo, valor, pago_em) VALU
   (7, 6, 2, 'cartao_debito', 35.00, '2026-10-14 20:35:00'),
   (8, 7, 3, 'pix', 101.00, '2026-10-17 22:25:00'),
   (9, 8, 3, 'cartao_credito', 43.00, '2026-10-19 23:10:00'),
-  (10, 9, 2, 'dinheiro', 37.00, '2026-10-24 19:20:00');
+  (10, 9, 2, 'dinheiro', 37.00, '2026-10-24 19:20:00'),
+  (11, 13, 2, 'pix', 73.00, '2026-09-18 20:10:00'),
+  (12, 14, 3, 'cartao_credito', 37.00, '2026-09-27 22:40:00'),
+  (13, 15, 2, 'pix', 79.00, '2026-11-02 19:30:00');
 
 -- Ajustes de exemplo executados após a carga (UPDATE e DELETE)
 -- Reajuste do preço da cerveja lata: as comandas antigas mantêm o valor
@@ -277,7 +298,7 @@ SELECT c.id AS comanda, cl.nome AS cliente, u.nome AS atendente, c.status,
  GROUP BY c.id, cl.nome, u.nome, c.status, c.aberta_em
  ORDER BY c.aberta_em;
 
--- Q2. Comandas de um período (outubro/2026) com a quantidade de itens
+-- Q2. Comandas de um período (1ª quinzena de outubro/2026: dias 01 a 15) com a quantidade de itens
 SELECT c.id AS comanda, cl.nome AS cliente, c.aberta_em,
        SUM(i.quantidade) AS qtd_itens
   FROM comandas c
@@ -351,3 +372,45 @@ SELECT cl.nome AS cliente, SUM(v.total) AS total_gasto
  GROUP BY cl.id, cl.nome
 HAVING SUM(v.total) > (SELECT AVG(total) FROM vw_resumo_comandas WHERE status <> 'cancelada')
  ORDER BY total_gasto DESC;
+
+-- Q10. Faturamento por mês (GROUP BY + HAVING)
+-- Agrupa as comandas não canceladas pelo mês de abertura (DATE_FORMAT) e soma
+-- os totais da view. O HAVING filtra DEPOIS do agrupamento (o WHERE filtra antes),
+-- mantendo apenas os meses com faturamento acima de R$ 100,00.
+SELECT DATE_FORMAT(c.aberta_em, '%Y-%m') AS mes,
+       COUNT(*)                          AS qtd_comandas,
+       SUM(v.total)                      AS faturamento
+  FROM comandas c
+  JOIN vw_resumo_comandas v ON v.comanda_id = c.id
+ WHERE c.status <> 'cancelada'
+ GROUP BY DATE_FORMAT(c.aberta_em, '%Y-%m')
+HAVING SUM(v.total) > 100
+ ORDER BY mes;
+
+-- Q11. Ranking de clientes por valor gasto (subconsulta)
+-- A subconsulta na cláusula FROM (tabela derivada "t") calcula o gasto de cada
+-- cliente; a consulta externa numera o ranking com RANK() e calcula a
+-- participação de cada um com uma subconsulta escalar (total geral).
+SELECT RANK() OVER (ORDER BY t.total_gasto DESC) AS posicao,
+       t.cliente, t.qtd_comandas, t.total_gasto,
+       ROUND(100 * t.total_gasto /
+             (SELECT SUM(total) FROM vw_resumo_comandas WHERE status <> 'cancelada'), 1) AS percentual
+  FROM (SELECT cl.nome AS cliente, COUNT(*) AS qtd_comandas, SUM(v.total) AS total_gasto
+          FROM clientes cl
+          JOIN comandas c ON c.cliente_id = cl.id
+          JOIN vw_resumo_comandas v ON v.comanda_id = c.id
+         WHERE c.status <> 'cancelada'
+         GROUP BY cl.id, cl.nome) t
+ ORDER BY posicao, t.cliente;
+
+-- Q12. Consulta que usa a VIEW: situação financeira por status de comanda
+-- A view já traz total e pago de cada comanda; aqui só agrupamos por status,
+-- sem repetir a lógica de soma dos itens e dos pagamentos.
+SELECT v.status,
+       COUNT(*)                  AS qtd_comandas,
+       SUM(v.total)              AS total,
+       SUM(v.pago)               AS pago,
+       SUM(v.total - v.pago)     AS a_receber
+  FROM vw_resumo_comandas v
+ GROUP BY v.status
+ ORDER BY total DESC;
