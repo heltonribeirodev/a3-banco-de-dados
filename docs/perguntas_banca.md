@@ -85,7 +85,7 @@ Com *prepared statements* (PDO): o SQL e os valores seguem separados, e os valor
 Todo texto vindo da API ou do usuário passa por uma função de escape (`Util.esc`) antes de entrar no HTML, de modo que `<script>` é exibido como texto. Testamos cadastrando uma categoria com `<img onerror=...>`.
 
 **24. Se o front-end esconde o botão, isso basta para a segurança?**
-Não. Esconder é conveniência de interface; qualquer um pode chamar a API diretamente. A autorização real é feita na API (retorna 403),, e a collection do Postman confere isso (403 para atendente em rota de administrador).
+Não. Esconder é conveniência de interface; qualquer um pode chamar a API diretamente. A autorização real é feita na API (retorna 403): um atendente que chame uma rota de administrador recebe 403 mesmo sem usar a interface.
 
 **25. O que é CORS e como foi configurado?**
 Mecanismo do navegador que controla se uma página de uma origem pode chamar a API de outra. A API só devolve `Access-Control-Allow-Origin` para as origens listadas (padrão: `localhost`). O protótipo está na mesma origem, então nem precisaria de CORS.

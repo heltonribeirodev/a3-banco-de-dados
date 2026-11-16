@@ -56,8 +56,8 @@
 **Falar:** uma frase por item. Mencionar a limitação conhecida (sem limite de tentativas de login).
 
 ### Slide 12 — Testes (0:45)
-**Na tela:** tabela "teste × esperado × obtido" das 5 regras + "collection do Postman: 50 testes, 0 falhas".
-**Falar:** a collection cria e remove os próprios dados; mostrar o Runner só se houver tempo.
+**Na tela:** tabela "teste × esperado × obtido" das 5 regras.
+**Falar:** explicar as 5 regras (422, 409, 403, 401) e lembrar que cada uma aparece na demonstração ao vivo.
 
 ### Slide 13 — Aprendizados e trabalhos futuros (0:45)
 **Na tela:** 3 aprendizados + 3 melhorias (estoque, limite de login, upload de imagem).
@@ -90,4 +90,4 @@
 11. **(Opcional)** No phpMyAdmin, mostre `valor_unitario` e execute `CALL sp_registrar_pagamento(16, 3, 'pix', 1.00);` — falha com mensagem e sem alterar dados (rollback).
 
 **Plano B se algo falhar:** recarregue a página (o token fica na aba); se a API não responder, confira o Apache/MySQL; mantenha prints
-de cada tela em um slide de reserva e a collection do Postman aberta.
+de cada tela em um slide de reserva e as consultas SQL prontas no phpMyAdmin.

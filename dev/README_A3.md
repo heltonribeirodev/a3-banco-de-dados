@@ -12,7 +12,6 @@ dev/
   assets/            default.png (imagem padrão), logo.png e uploads/ (imagens dos produtos)
   db/                sistema_gestao_a3.sql (DDL + DML + DQL) e DER (.mmd e .png)
   prototipo/         interface oficial (index.html, css/estilo.css, js/*.js)
-  postman/           collection do Postman (material extra, opcional)
   README_A3.md       este arquivo
 docs/                relatório técnico, roteiro da apresentação, perguntas da banca
 ```
@@ -145,9 +144,8 @@ autorização de verdade é sempre da API.
 
 ## Testes
 
-A collection do Postman (`dev/postman/`) cobre login, GET/POST/PUT/DELETE das sete tabelas, a regra de
-pagamento acima do saldo e os sete relatórios; ao rodar no **Runner**, os 50 testes passaram. O protótipo também
-foi conferido manualmente no navegador.
+O protótipo foi conferido manualmente no navegador (login, permissões por perfil, CRUD, comandas, pagamentos e
+relatórios) e as regras de negócio principais foram verificadas contra a API (422, 409, 403 e 401).
 
 ## Limitações conhecidas
 

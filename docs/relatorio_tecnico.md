@@ -342,13 +342,11 @@ Destaque: o formulário, os filtros, as colunas ordenáveis e os botões de cada
 devolvida pela própria API**, de modo que a API é a fonte única de verdade. O front-end esconde botões não permitidos ao
 perfil, mas a autorização efetiva é sempre feita na API. O texto da API é escapado antes de ser inserido na página (proteção contra XSS).
 
-Organização do repositório: `dev/api/v1` (API), `dev/db` (script e diagramas), `dev/prototipo` (interface),
-`dev/postman` (collection opcional) e `docs` (documentação).
+Organização do repositório: `dev/api/v1` (API), `dev/db` (script e diagramas), `dev/prototipo` (interface) e `docs` (documentação).
 
 ## 9. Testes
 
-**Collection do Postman** (`dev/postman/`): login, `GET`/`POST`/`PUT`/`DELETE` das sete tabelas, regra de pagamento acima do
-saldo e os sete relatórios. Resultado no Runner: **50 testes, 0 falhas**. As cinco regras de negócio principais foram verificadas:
+**Regras de negócio.** As cinco regras principais foram verificadas contra a API durante o desenvolvimento:
 
 | Regra de negócio | Esperado | Obtido |
 |---|---|---|

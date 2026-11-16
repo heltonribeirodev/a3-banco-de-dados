@@ -38,7 +38,6 @@ Banco de dados (XAMPP padrão): usuário `root`, **sem senha** (configurado em `
 - API REST com GET/POST/PUT/DELETE nas 7 tabelas, JWT, permissões e 7 relatórios.
 - Protótipo: login, CRUD, comandas (itens, pagamento dividido, fiado, cancelar), relatórios, responsivo.
 - Rascunhos em `docs/`: `relatorio_tecnico.md`, `slide.md` e `perguntas_banca.md`.
-- Collection do Postman (opcional): `dev/postman/` — testada no Runner: 50 de 50 testes passaram.
 
 ## 4. O que FALTA (checklist)
 
@@ -51,9 +50,8 @@ Preencham o responsável e a data de cada item. (A API e o protótipo já foram 
 | 3 | **PowerPoint.** Montar a partir de `docs/slide.md` (poucos textos por slide). O arquivo apresentado em 01/12 deve ser **o mesmo** enviado em 28/11. | | | ☐ |
 | 4 | **Ensaiar a demonstração** (roteiro no fim de `docs/slide.md`) no computador que será usado na apresentação, e uma vez num celular. | | | ☐ |
 | 5 | **Estudar as perguntas e os 6 exercícios** de `docs/perguntas_banca.md`. A banca pode pedir alteração de código ao vivo. Todos devem saber explicar o projeto. | todos | | ☐ |
-| 6 | **Testar a collection do Postman** no Runner (opcional). Testada em 10/11/2026: 50 de 50 testes passaram. | | | ☑ |
-| 7 | **Fazer o merge** da branch `a3-finalizacao` na `master` (ou entregar o zip dessa branch). | | | ☐ |
-| 8 | **Montar o pacote de entrega** e enviar no Classroom (um integrante): ver lista abaixo. | | 28/11 | ☐ |
+| 6 | **Fazer o merge** da branch `a3-finalizacao` na `master` (ou entregar o zip dessa branch). | | | ☐ |
+| 7 | **Montar o pacote de entrega** e enviar no Classroom (um integrante): ver lista abaixo. | | 28/11 | ☐ |
 
 ### Pacote de entrega
 
@@ -61,7 +59,6 @@ Preencham o responsável e a data de cada item. (A API e o protótipo já foram 
 - [ ] `dev/db/sistema_gestao_a3.sql` (DDL + DML + DQL executáveis)
 - [ ] Código-fonte (zip do repositório: `dev/api`, `dev/prototipo`, `dev/db`, `dev/assets`, `README_A3.md`)
 - [ ] Apresentação em PowerPoint
-- [ ] Collection do Postman (`dev/postman/`) — opcional
 
 ## 5. Regras do enunciado que vale lembrar
 
