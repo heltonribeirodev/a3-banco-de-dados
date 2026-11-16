@@ -342,14 +342,13 @@ Destaque: o formulário, os filtros, as colunas ordenáveis e os botões de cada
 devolvida pela própria API**, de modo que a API é a fonte única de verdade. O front-end esconde botões não permitidos ao
 perfil, mas a autorização efetiva é sempre feita na API. O texto da API é escapado antes de ser inserido na página (proteção contra XSS).
 
-Organização do repositório: `dev/api/v1` (API), `dev/db` (script e diagramas), `dev/prototipo` (interface), `dev/tests`
-(testes), `dev/postman` (collection opcional) e `docs` (documentação).
+Organização do repositório: `dev/api/v1` (API), `dev/db` (script e diagramas), `dev/prototipo` (interface),
+`dev/postman` (collection opcional) e `docs` (documentação).
 
 ## 9. Testes
 
-**Testes automatizados da API** (`dev/tests/teste_api.php`, PHP CLI com cURL): 74 verificações — login, `GET`/`POST`/`PUT`/`DELETE`
-das sete tabelas, as cinco regras de negócio principais, validações, relatórios e a limpeza dos dados criados. Resultado da última
-execução: **74 ok, 0 falhas**.
+**Collection do Postman** (`dev/postman/`): login, `GET`/`POST`/`PUT`/`DELETE` das sete tabelas, regra de pagamento acima do
+saldo e os sete relatórios. Resultado no Runner: **50 testes, 0 falhas**. As cinco regras de negócio principais foram verificadas:
 
 | Regra de negócio | Esperado | Obtido |
 |---|---|---|
@@ -359,7 +358,7 @@ execução: **74 ok, 0 falhas**.
 | Atendente em rota de administrador | 403 | 403 |
 | Requisição sem token | 401 | 401 |
 
-**Testes no navegador** (Chrome, roteiro automatizado): login e logout, permissões por perfil (atendente sem a aba de usuários e sem botões
+**Testes no navegador** (Chrome): login e logout, permissões por perfil (atendente sem a aba de usuários e sem botões
 proibidos), CRUD de categorias, ordenação, busca, paginação, validações de formulário, abertura de comanda, itens, pagamento dividido
 com fechamento automático, fiado, cancelamento, mensagens 409 e 422, retorno ao login com token inválido (401), tentativa de XSS e
 ausência de rolagem horizontal em tela de 390 px. **[AJUSTAR: repetir manualmente os principais fluxos antes da apresentação.]**

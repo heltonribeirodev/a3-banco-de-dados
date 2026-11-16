@@ -1,24 +1,14 @@
-/**
- * comandas.js — tela dedicada de comandas.
- *
- * Lista com filtros (status, cliente, período) e tela de detalhe onde se
- * adicionam/editam/removem itens, registram pagamentos (inclusive divididos),
- * marca-se como fiado e cancela. As regras de negócio ficam na API; aqui
- * apenas se esconde o que não faz sentido e se mostram os erros com clareza
- * (409 = comanda não permite a ação; 422 = valor inválido, ex.: acima do saldo).
- */
 const Comandas = {
   filtros: {},
   pagina: 1,
   meta: null,
-  atual: null,          // comanda aberta na tela de detalhe
-  itemEditando: null,   // item em edição (null = novo item)
+  atual: null,
+  itemEditando: null,
 
   $(id) { return document.getElementById(id); },
 
-  // -------------------------------------------------------------------------
-  // Lista
-  // -------------------------------------------------------------------------
+  // Lista 
+
   async abrir() {
     this.$('comandasLista').hidden = false;
     this.$('comandaDetalhe').hidden = true;
@@ -34,7 +24,7 @@ const Comandas = {
       sel.innerHTML = '<option value="">Todos</option>' +
         clientes.map(c => '<option value="' + c.id + '">' + Util.esc(c.nome) + '</option>').join('');
       sel.value = escolhido;
-    } catch (e) { /* o erro já aparece no painel de log */ }
+    } catch (e) { Util.aviso(this.$('cmdMsg'), 'erro', 'Não foi possível carregar os clientes: ' + Api.mensagemErro(e)); }
   },
 
   async listar() {
@@ -79,16 +69,14 @@ const Comandas = {
     } catch (e) { Util.aviso(this.$('cmdMsg'), 'erro', Api.mensagemErro(e)); }   // 409 se houver pagamentos
   },
 
-  // -------------------------------------------------------------------------
-  // Abrir comanda nova
-  // -------------------------------------------------------------------------
+
   async abrirDialogNova() {
     this.$('formComandaMsg').innerHTML = '';
     try {
       const clientes = await Api.listarTodos('clientes');
       this.$('novoCliente').innerHTML = '<option value="">Selecione…</option>' +
         clientes.map(c => '<option value="' + c.id + '">' + Util.esc(c.nome) + '</option>').join('');
-    } catch (e) { Util.aviso(this.$('cmdMsg'), 'erro', Api.mensagemErro(e)); return; }
+    } catch (e) { Util.aviso(this.$('cmdMsg'), 'erro', 'Não foi possível carregar os clientes: ' + Api.mensagemErro(e)); return; }
     this.$('dlgComanda').showModal();
   },
 
@@ -102,9 +90,6 @@ const Comandas = {
     } catch (e) { Util.aviso(this.$('formComandaMsg'), 'erro', Api.mensagemErro(e)); }
   },
 
-  // -------------------------------------------------------------------------
-  // Detalhe
-  // -------------------------------------------------------------------------
   async verDetalhe(id, mensagemOk) {
     try {
       const r = await Api.get('/comandas/' + id);
@@ -146,7 +131,7 @@ const Comandas = {
         h += '<tr><td>' + Util.esc(i.produto_nome) + '</td><td class="num">' + i.quantidade + '</td>' +
           '<td class="num">' + Util.moeda(i.valor_unitario) + '</td><td class="num">' + Util.moeda(i.subtotal) + '</td>' +
           '<td class="acoes">' + (aberta ? '<button class="peq" data-a="editarItem" data-id="' + i.id + '">Editar</button>' +
-          '<button class="peq perigo" data-a="removerItem" data-id="' + i.id + '">Remover</button>' : '') + '</td></tr>';
+            '<button class="peq perigo" data-a="removerItem" data-id="' + i.id + '">Remover</button>' : '') + '</td></tr>';
       });
       h += '</tbody></table></div>';
     }
@@ -163,20 +148,15 @@ const Comandas = {
       h += '</tbody></table></div>';
     }
 
-    // ---- ações sobre a comanda ----
+    // ---- ações comanda ----
     if (aceitaPagto) {
       h += '<div class="botoes">' + (aberta ? '<button data-a="fiado">Marcar como fiado</button>' : '') +
         '<button class="perigo" data-a="cancelar">Cancelar comanda</button></div>';
     }
     this.$('comandaDetalhe').innerHTML = h;
   },
-
-  /** Mensagem no topo do detalhe (erros 409/422 etc.). */
   msgDetalhe(tipo, texto) { Util.aviso(this.$('detMsg'), tipo, texto); },
 
-  // -------------------------------------------------------------------------
-  // Itens
-  // -------------------------------------------------------------------------
   async abrirDialogItem(item) {
     this.itemEditando = item;
     this.$('itemTitulo').textContent = item ? 'Editar item' : 'Adicionar item';
@@ -228,9 +208,7 @@ const Comandas = {
     } catch (e) { this.msgDetalhe('erro', Api.mensagemErro(e)); }
   },
 
-  // -------------------------------------------------------------------------
-  // Pagamentos
-  // -------------------------------------------------------------------------
+
   abrirDialogPagto() {
     const c = this.atual;
     this.$('pagtoInfo').textContent = 'Total ' + Util.moeda(c.total) + ' · Pago ' + Util.moeda(c.pago) + ' · Saldo ' + Util.moeda(c.saldo);
@@ -243,7 +221,6 @@ const Comandas = {
     const valor = Number(this.$('pagtoValor').value);
     const msg = this.$('formPagtoMsg');
     if (!(valor > 0)) return Util.aviso(msg, 'erro', 'Informe um valor maior que zero.');
-    // O limite do saldo é verificado pela API (422): assim a regra fica em um só lugar.
     const quita = this.atual.saldo - valor <= 0.005;   // este pagamento cobre o saldo?
     try {
       await Api.post('/pagamentos', { comanda_id: this.atual.id, metodo: this.$('pagtoMetodo').value, valor });
@@ -260,25 +237,21 @@ const Comandas = {
     } catch (e) { this.msgDetalhe('erro', Api.mensagemErro(e)); }
   },
 
-  // -------------------------------------------------------------------------
-  // Mudança de status (PUT exige cliente_id, pois é substituição do registro)
-  // -------------------------------------------------------------------------
   async mudarStatus(status, pergunta, ok) {
     if (!confirm(pergunta)) return;
     try {
       await Api.put('/comandas/' + this.atual.id, { cliente_id: this.atual.cliente_id, status });
       await this.verDetalhe(this.atual.id, ok);
-    } catch (e) { this.msgDetalhe('erro', Api.mensagemErro(e)); }   // ex.: 409 cancelar com pagamentos
+    } catch (e) { this.msgDetalhe('erro', Api.mensagemErro(e)); }
   },
 
-  // -------------------------------------------------------------------------
-  // Eventos (ligados uma única vez pelo App)
-  // -------------------------------------------------------------------------
   iniciar() {
     this.$('cmdFiltros').addEventListener('submit', ev => {
       ev.preventDefault();
-      this.filtros = { status: this.$('fStatus').value, cliente_id: this.$('fCliente').value,
-                       data_inicio: this.$('fDe').value, data_fim: this.$('fAte').value };
+      this.filtros = {
+        status: this.$('fStatus').value, cliente_id: this.$('fCliente').value,
+        data_inicio: this.$('fDe').value, data_fim: this.$('fAte').value
+      };
       this.pagina = 1;
       this.listar();
     });
@@ -291,7 +264,6 @@ const Comandas = {
     this.$('formComanda').addEventListener('submit', ev => { ev.preventDefault(); this.criarComanda(); });
     this.$('formItem').addEventListener('submit', ev => { ev.preventDefault(); this.salvarItem(); });
     this.$('formPagto').addEventListener('submit', ev => { ev.preventDefault(); this.salvarPagto(); });
-    // ao trocar o produto de um item existente, o preço antigo deixa de valer
     this.$('itemProduto').addEventListener('change', () => { if (this.itemEditando) this.$('itemValor').value = ''; });
 
     this.$('cmdTabela').addEventListener('click', ev => {

@@ -1,178 +1,35 @@
--- =====================================================================
--- Projeto A3 - UC Banco de Dados (2026/2)
--- Sistema de Gestão de Comandas (bar/restaurante)
--- Banco: sistema_gestao_a3  (MySQL 8+ / MariaDB 10.4+)
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
 --
--- Este script contém, em ordem:
---   1) DDL - criação do banco, tabelas, chaves e restrições
---   2) DML - carga inicial fictícia, com UPDATE e DELETE de exemplo
---   3) DQL - consultas estratégicas com JOIN
--- Pode ser executado inteiro, mais de uma vez (recria apenas este banco).
--- =====================================================================
+-- Host: 127.0.0.1
+-- Tempo de geração: 17/11/2026 às 00:05
+-- Versão do servidor: 10.4.32-MariaDB
+-- Versão do PHP: 8.2.12
 
-SET NAMES utf8mb4;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
-CREATE DATABASE IF NOT EXISTS sistema_gestao_a3
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE sistema_gestao_a3;
 
--- =====================================================================
--- 1) DDL
--- =====================================================================
-SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS pagamentos;
-DROP TABLE IF EXISTS itens_comanda;
-DROP TABLE IF EXISTS comandas;
-DROP TABLE IF EXISTS clientes;
-DROP TABLE IF EXISTS produtos;
-DROP TABLE IF EXISTS categorias;
-DROP TABLE IF EXISTS usuarios;
-DROP VIEW  IF EXISTS vw_resumo_comandas;
-SET FOREIGN_KEY_CHECKS = 1;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
-CREATE TABLE usuarios (
-  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  nome         VARCHAR(100) NOT NULL,
-  email        VARCHAR(255) NOT NULL,
-  senha_hash   VARCHAR(255) NOT NULL,
-  perfil       ENUM('admin','atendente') NOT NULL DEFAULT 'atendente',
-  status_conta ENUM('ativo','inativo')   NOT NULL DEFAULT 'ativo',
-  criado_em    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT pk_usuarios PRIMARY KEY (id),
-  CONSTRAINT uq_usuarios_email UNIQUE (email)
-) ENGINE=InnoDB;
-
-CREATE TABLE categorias (
-  id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  nome  VARCHAR(50) NOT NULL,
-  CONSTRAINT pk_categorias PRIMARY KEY (id),
-  CONSTRAINT uq_categorias_nome UNIQUE (nome)
-) ENGINE=InnoDB;
-
-CREATE TABLE produtos (
-  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  categoria_id INT UNSIGNED NOT NULL,
-  nome         VARCHAR(100) NOT NULL,
-  valor        DECIMAL(10,2) NOT NULL,
-  imagem       VARCHAR(255) NOT NULL DEFAULT 'assets/default.png',
-  ativo        TINYINT(1) NOT NULL DEFAULT 1,
-  criado_em    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT pk_produtos PRIMARY KEY (id),
-  CONSTRAINT ck_produtos_valor CHECK (valor >= 0)
-) ENGINE=InnoDB;
-
-CREATE TABLE clientes (
-  id        INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  nome      VARCHAR(100) NOT NULL,
-  telefone  VARCHAR(20) NULL,
-  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT pk_clientes PRIMARY KEY (id)
-) ENGINE=InnoDB;
-
-CREATE TABLE comandas (
-  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  cliente_id INT UNSIGNED NOT NULL,
-  usuario_id INT UNSIGNED NOT NULL,
-  status     ENUM('aberta','fechada','fiado','cancelada') NOT NULL DEFAULT 'aberta',
-  aberta_em  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  fechada_em DATETIME NULL,
-  CONSTRAINT pk_comandas PRIMARY KEY (id)
-) ENGINE=InnoDB;
-
-CREATE TABLE itens_comanda (
-  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  comanda_id     INT UNSIGNED NOT NULL,
-  produto_id     INT UNSIGNED NOT NULL,
-  quantidade     INT UNSIGNED NOT NULL,
-  valor_unitario DECIMAL(10,2) NOT NULL,
-  CONSTRAINT pk_itens_comanda PRIMARY KEY (id),
-  CONSTRAINT ck_itens_quantidade CHECK (quantidade > 0),
-  CONSTRAINT ck_itens_valor CHECK (valor_unitario >= 0)
-) ENGINE=InnoDB;
-
-CREATE TABLE pagamentos (
-  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  comanda_id INT UNSIGNED NOT NULL,
-  usuario_id INT UNSIGNED NOT NULL,
-  metodo     ENUM('pix','dinheiro','cartao_credito','cartao_debito') NOT NULL,
-  valor      DECIMAL(10,2) NOT NULL,
-  pago_em    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT pk_pagamentos PRIMARY KEY (id),
-  CONSTRAINT ck_pagamentos_valor CHECK (valor > 0)
-) ENGINE=InnoDB;
-
--- Chaves estrangeiras (ALTER TABLE)
-ALTER TABLE produtos
-  ADD CONSTRAINT fk_produtos_categoria
-  FOREIGN KEY (categoria_id) REFERENCES categorias (id)
-  ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE comandas
-  ADD CONSTRAINT fk_comandas_cliente
-  FOREIGN KEY (cliente_id) REFERENCES clientes (id)
-  ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT fk_comandas_usuario
-  FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
-  ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- Os itens pertencem à comanda (exclui junto); o produto vendido nunca é
--- apagado enquanto houver histórico de venda (RESTRICT).
-ALTER TABLE itens_comanda
-  ADD CONSTRAINT fk_itens_comanda
-  FOREIGN KEY (comanda_id) REFERENCES comandas (id)
-  ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT fk_itens_produto
-  FOREIGN KEY (produto_id) REFERENCES produtos (id)
-  ON DELETE RESTRICT ON UPDATE CASCADE;
-
-ALTER TABLE pagamentos
-  ADD CONSTRAINT fk_pagamentos_comanda
-  FOREIGN KEY (comanda_id) REFERENCES comandas (id)
-  ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT fk_pagamentos_usuario
-  FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
-  ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- Índices de apoio às consultas e filtros mais frequentes
--- Observação: o InnoDB já cria automaticamente um índice para cada chave
--- estrangeira (ex.: pagamentos.comanda_id, itens_comanda.comanda_id). Por isso
--- NÃO se cria um índice extra nessas colunas: seria redundante.
-ALTER TABLE comandas   ADD INDEX idx_comandas_status_data (status, aberta_em); -- filtros por status e período
-ALTER TABLE produtos   ADD INDEX idx_produtos_nome (nome);                      -- busca por nome
-ALTER TABLE pagamentos ADD INDEX idx_pagamentos_pago_em (pago_em);              -- relatórios por período
-
--- Visão com o total de cada comanda (soma dos itens) e o valor já pago
-CREATE VIEW vw_resumo_comandas AS
-SELECT c.id AS comanda_id,
-       c.status,
-       c.aberta_em,
-       COALESCE((SELECT SUM(i.quantidade * i.valor_unitario)
-                   FROM itens_comanda i WHERE i.comanda_id = c.id), 0) AS total,
-       COALESCE((SELECT SUM(p.valor)
-                   FROM pagamentos p WHERE p.comanda_id = c.id), 0)    AS pago
-  FROM comandas c;
-
--- ---------------------------------------------------------------------
--- 1.1) PROCEDURES COM TRANSAÇÃO
--- Cada procedure executa uma operação completa do negócio dentro de uma
--- transação: ou tudo é gravado (COMMIT) ou nada é (ROLLBACK). As regras de
--- negócio são verificadas com SIGNAL, que interrompe a operação com uma
--- mensagem de erro. O SELECT ... FOR UPDATE trava a comanda enquanto a
--- transação está aberta, evitando que dois pagamentos simultâneos passem do saldo.
--- ---------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS sp_adicionar_item;
-DROP PROCEDURE IF EXISTS sp_registrar_pagamento;
-DROP PROCEDURE IF EXISTS sp_cancelar_comanda;
+--
+-- Banco de dados: `sistema_gestao_a3`
+--
 
 DELIMITER $$
-
--- Lança um item em uma comanda aberta, usando o preço atual do produto.
-CREATE PROCEDURE sp_adicionar_item(IN p_comanda INT UNSIGNED, IN p_produto INT UNSIGNED, IN p_qtd INT UNSIGNED)
-BEGIN
+--
+-- Procedimentos
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_adicionar_item` (IN `p_comanda` INT UNSIGNED, IN `p_produto` INT UNSIGNED, IN `p_qtd` INT UNSIGNED)   BEGIN
   DECLARE v_status VARCHAR(20) DEFAULT NULL;
   DECLARE v_valor  DECIMAL(10,2);
   DECLARE v_ativo  TINYINT DEFAULT NULL;
-  -- qualquer erro desfaz a transação e é repassado a quem chamou
+  
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
   START TRANSACTION;
@@ -195,11 +52,28 @@ BEGIN
   COMMIT;
 END$$
 
--- Registra um pagamento (a comanda pode ter vários: pagamento dividido).
--- Se o pagamento cobre todo o saldo, a comanda é fechada na mesma transação.
-CREATE PROCEDURE sp_registrar_pagamento(IN p_comanda INT UNSIGNED, IN p_usuario INT UNSIGNED,
-                                        IN p_metodo VARCHAR(20), IN p_valor DECIMAL(10,2))
-BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_cancelar_comanda` (IN `p_comanda` INT UNSIGNED)   BEGIN
+  DECLARE v_status VARCHAR(20) DEFAULT NULL;
+  DECLARE v_pagos  INT;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+
+  START TRANSACTION;
+  SELECT status INTO v_status FROM comandas WHERE id = p_comanda FOR UPDATE;
+  IF v_status IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda não encontrada.';
+  END IF;
+  IF v_status NOT IN ('aberta', 'fiado') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Só comandas abertas ou em fiado podem ser canceladas.';
+  END IF;
+  SELECT COUNT(*) INTO v_pagos FROM pagamentos WHERE comanda_id = p_comanda;
+  IF v_pagos > 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda com pagamentos não pode ser cancelada.';
+  END IF;
+  UPDATE comandas SET status = 'cancelada', fechada_em = NOW() WHERE id = p_comanda;
+  COMMIT;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_registrar_pagamento` (IN `p_comanda` INT UNSIGNED, IN `p_usuario` INT UNSIGNED, IN `p_metodo` VARCHAR(20), IN `p_valor` DECIMAL(10,2))   BEGIN
   DECLARE v_status VARCHAR(20) DEFAULT NULL;
   DECLARE v_total  DECIMAL(10,2);
   DECLARE v_pago   DECIMAL(10,2);
@@ -229,302 +103,410 @@ BEGIN
   SELECT status, total, pago FROM vw_resumo_comandas WHERE comanda_id = p_comanda;
 END$$
 
--- Cancela uma comanda que ainda não recebeu nenhum pagamento.
-CREATE PROCEDURE sp_cancelar_comanda(IN p_comanda INT UNSIGNED)
-BEGIN
-  DECLARE v_status VARCHAR(20) DEFAULT NULL;
-  DECLARE v_pagos  INT;
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
-
-  START TRANSACTION;
-  SELECT status INTO v_status FROM comandas WHERE id = p_comanda FOR UPDATE;
-  IF v_status IS NULL THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda não encontrada.';
-  END IF;
-  IF v_status NOT IN ('aberta', 'fiado') THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Só comandas abertas ou em fiado podem ser canceladas.';
-  END IF;
-  SELECT COUNT(*) INTO v_pagos FROM pagamentos WHERE comanda_id = p_comanda;
-  IF v_pagos > 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Comanda com pagamentos não pode ser cancelada.';
-  END IF;
-  UPDATE comandas SET status = 'cancelada', fechada_em = NOW() WHERE id = p_comanda;
-  COMMIT;
-END$$
-
 DELIMITER ;
 
--- =====================================================================
--- 2) DML - carga inicial com dados fictícios para homologação
--- =====================================================================
--- Categorias
-INSERT INTO categorias (id, nome) VALUES
-  (1, 'Cervejas'),
-  (2, 'Refrigerantes'),
-  (3, 'Águas e Energéticos'),
-  (4, 'Porções e Lanches'),
-  (5, 'Salgadinhos e Doces'),
-  (6, 'Jogos'),
-  (7, 'Destilados e Drinks');
+-- --------------------------------------------------------
 
--- Produtos
-INSERT INTO produtos (id, categoria_id, nome, valor, imagem) VALUES
-  (1, 1, 'Cerveja Lata 350ml', 6.00, 'assets/default.png'),
-  (2, 1, 'Cerveja Long Neck', 8.50, 'assets/uploads/long-neck-sol-1780914669.webp'),
-  (3, 1, 'Cerveja Garrafa 600ml', 12.00, 'assets/uploads/brahma-garrafa-1780914618.jpg'),
-  (4, 2, 'Refrigerante Lata 350ml', 5.00, 'assets/default.png'),
-  (5, 2, 'Refrigerante 2L', 12.00, 'assets/uploads/sprite-2l-1780914972.jpg'),
-  (6, 3, 'Água Mineral 500ml', 3.50, 'assets/uploads/--gua-mineral-500ml-1780915049.jpg'),
-  (7, 3, 'Energético 473ml', 11.00, 'assets/uploads/monster-473ml-1780915205.png'),
-  (8, 4, 'Porção de Fritas', 25.00, 'assets/uploads/fritas--1780914501.png'),
-  (9, 4, 'X-Bacon', 22.00, 'assets/uploads/x-bacon-1780761286.png'),
-  (10, 4, 'Porção de Calabresa', 30.00, 'assets/default.png'),
-  (11, 5, 'Salgadinho 60g', 7.00, 'assets/uploads/doritos-1780914737.jpg'),
-  (12, 5, 'Chocolate em Barra', 6.50, 'assets/uploads/kitkat-1780914842.jpg'),
-  (13, 6, 'Ficha de Sinuca', 2.00, 'assets/uploads/ficha-de-sinuca-1780919445.webp'),
-  (14, 4, 'Petisco da Casa', 18.00, 'assets/default.png'),
-  (15, 1, 'Cerveja Litrão', 14.00, 'assets/uploads/brahma-litr--o-1780760328.png'),
-  (16, 2, 'Coca-Cola 1L', 9.00, 'assets/uploads/coca-cola-1l-1780914940.jpg'),
-  (17, 5, 'Cebolitos 60g', 6.50, 'assets/uploads/cebolitos-1780914779.jpg'),
-  (18, 7, 'Smirnoff 1L', 55.00, 'assets/uploads/smirnoff-1l-1780915114.jpg'),
-  (19, 7, 'Ice Big Apple', 12.00, 'assets/uploads/ice-kislla-big-apple-1780915250.jpg');
+--
+-- Estrutura para tabela `categorias`
+--
 
--- Clientes
-INSERT INTO clientes (id, nome, telefone) VALUES
-  (1, 'Carlos Almeida', '(41) 99000-0001'),
-  (2, 'Fernanda Souza', '(41) 99000-0002'),
-  (3, 'João Pereira', '(41) 99000-0003'),
-  (4, 'Mariana Costa', NULL),
-  (5, 'Ricardo Lima', '(41) 99000-0005'),
-  (6, 'Patrícia Rocha', NULL),
-  (7, 'Bruno Carvalho', '(41) 99000-0007'),
-  (8, 'Juliana Martins', '(41) 99000-0008');
+CREATE TABLE `categorias` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `nome` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Usuários (senha de todos: Senha@123, armazenada com hash bcrypt)
-INSERT INTO usuarios (id, nome, email, senha_hash, perfil, status_conta) VALUES
-  (1, 'Administrador', 'admin@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'admin', 'ativo'),
-  (2, 'Ana Atendente', 'ana@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'ativo'),
-  (3, 'Pedro Atendente', 'pedro@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'ativo'),
-  (4, 'Lucas Desligado', 'lucas@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'inativo');
+--
+-- Despejando dados para a tabela `categorias`
+--
 
--- Comandas
-INSERT INTO comandas (id, cliente_id, usuario_id, status, aberta_em, fechada_em) VALUES
-  (1, 1, 2, 'fechada', '2026-10-05 19:10:00', '2026-10-05 20:45:00'),
-  (2, 2, 2, 'fechada', '2026-10-05 20:30:00', '2026-10-05 21:50:00'),
-  (3, 3, 3, 'fechada', '2026-10-06 18:45:00', '2026-10-06 20:35:00'),
-  (4, 4, 3, 'fechada', '2026-10-10 21:00:00', '2026-10-10 22:00:00'),
-  (5, 5, 2, 'fiado', '2026-10-12 17:20:00', NULL),
-  (6, 6, 2, 'fechada', '2026-10-14 19:50:00', '2026-10-14 20:35:00'),
-  (7, 7, 3, 'fechada', '2026-10-17 20:15:00', '2026-10-17 22:25:00'),
-  (8, 8, 3, 'fechada', '2026-10-19 22:00:00', '2026-10-19 23:10:00'),
-  (9, 1, 2, 'fechada', '2026-10-24 18:30:00', '2026-10-24 19:20:00'),
-  (10, 2, 3, 'aberta', '2026-10-26 19:40:00', NULL),
-  (11, 3, 2, 'aberta', '2026-10-28 20:05:00', NULL),
-  (12, 4, 3, 'cancelada', '2026-10-29 21:10:00', NULL),
-  (13, 5, 2, 'fechada', '2026-09-18 19:00:00', '2026-09-18 20:10:00'),
-  (14, 6, 3, 'fechada', '2026-09-27 21:30:00', '2026-09-27 22:40:00'),
-  (15, 7, 2, 'fechada', '2026-11-02 18:20:00', '2026-11-02 19:30:00');
+INSERT INTO `categorias` (`id`, `nome`) VALUES
+(3, 'Águas e Energéticos'),
+(1, 'Cervejas'),
+(7, 'Destilados e Drinks'),
+(6, 'Jogos'),
+(4, 'Porções e Lanches'),
+(2, 'Refrigerantes'),
+(5, 'Salgadinhos e Doces');
 
--- Itens das comandas (valor_unitario guarda o preço praticado na venda)
-INSERT INTO itens_comanda (id, comanda_id, produto_id, quantidade, valor_unitario) VALUES
-  (1, 1, 1, 4, 5.50),
-  (2, 1, 8, 1, 25.00),
-  (3, 2, 2, 3, 8.50),
-  (4, 2, 11, 2, 7.00),
-  (5, 3, 3, 2, 12.00),
-  (6, 3, 9, 1, 22.00),
-  (7, 3, 5, 1, 12.00),
-  (8, 4, 4, 2, 5.00),
-  (9, 4, 13, 5, 2.00),
-  (10, 5, 1, 6, 5.50),
-  (11, 5, 10, 1, 30.00),
-  (12, 6, 7, 2, 11.00),
-  (13, 6, 12, 2, 6.50),
-  (14, 7, 2, 6, 8.50),
-  (15, 7, 8, 2, 25.00),
-  (16, 8, 3, 3, 12.00),
-  (17, 8, 6, 2, 3.50),
-  (18, 9, 1, 5, 6.00),
-  (19, 9, 11, 1, 7.00),
-  (20, 10, 2, 2, 8.50),
-  (21, 10, 9, 1, 22.00),
-  (22, 11, 5, 1, 12.00),
-  (23, 11, 8, 1, 25.00),
-  (24, 12, 4, 1, 5.00),
-  (25, 13, 3, 4, 12.00),
-  (26, 13, 8, 1, 25.00),
-  (27, 14, 15, 2, 14.00),
-  (28, 14, 16, 1, 9.00),
-  (29, 15, 18, 1, 55.00),
-  (30, 15, 19, 2, 12.00);
+-- --------------------------------------------------------
 
--- Pagamentos (a comanda 5 está em fiado, com pagamento parcial)
-INSERT INTO pagamentos (id, comanda_id, usuario_id, metodo, valor, pago_em) VALUES
-  (1, 1, 2, 'pix', 47.00, '2026-10-05 20:45:00'),
-  (2, 2, 2, 'dinheiro', 39.50, '2026-10-05 21:50:00'),
-  (3, 3, 3, 'pix', 30.00, '2026-10-06 20:25:00'),
-  (4, 3, 3, 'cartao_debito', 28.00, '2026-10-06 20:35:00'),
-  (5, 4, 3, 'dinheiro', 20.00, '2026-10-10 22:00:00'),
-  (6, 5, 2, 'dinheiro', 20.00, '2026-10-12 19:20:00'),
-  (7, 6, 2, 'cartao_debito', 35.00, '2026-10-14 20:35:00'),
-  (8, 7, 3, 'pix', 101.00, '2026-10-17 22:25:00'),
-  (9, 8, 3, 'cartao_credito', 43.00, '2026-10-19 23:10:00'),
-  (10, 9, 2, 'dinheiro', 37.00, '2026-10-24 19:20:00'),
-  (11, 13, 2, 'pix', 73.00, '2026-09-18 20:10:00'),
-  (12, 14, 3, 'cartao_credito', 37.00, '2026-09-27 22:40:00'),
-  (13, 15, 2, 'pix', 79.00, '2026-11-02 19:30:00');
+--
+-- Estrutura para tabela `clientes`
+--
 
--- Uso das procedures (transações): uma comanda nova é atendida por inteiro por elas.
--- Comanda 16 aberta por Pedro (usuário 3) para Juliana (cliente 8).
-INSERT INTO comandas (id, cliente_id, usuario_id, status, aberta_em) VALUES (16, 8, 3, 'aberta', '2026-11-05 20:00:00');
-CALL sp_adicionar_item(16, 2, 2);                       -- 2 Long Neck  = 17,00
-CALL sp_adicionar_item(16, 8, 1);                       -- 1 Fritas     = 25,00 (total 42,00)
-CALL sp_registrar_pagamento(16, 3, 'pix', 20.00);       -- pagamento parcial: comanda continua aberta
-CALL sp_registrar_pagamento(16, 3, 'dinheiro', 22.00);  -- quita o saldo: a comanda é fechada
--- Exemplos que devem FALHAR (descomente um por vez; a transação sofre ROLLBACK):
--- CALL sp_registrar_pagamento(16, 3, 'pix', 1.00);     -- erro: comanda fechada
--- CALL sp_adicionar_item(16, 2, 1);                    -- erro: só em comanda aberta
--- CALL sp_cancelar_comanda(5);                         -- erro: comanda com pagamentos
+CREATE TABLE `clientes` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `telefone` varchar(20) DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Ajustes de exemplo executados após a carga (UPDATE e DELETE)
--- Reajuste do preço da cerveja lata: as comandas antigas mantêm o valor
--- original em itens_comanda.valor_unitario.
-UPDATE produtos SET valor = 6.00 WHERE id = 1;
--- Inativa um produto (em vez de excluir, preservando o histórico)
-UPDATE produtos SET ativo = 0 WHERE id = 14;
--- Correção de cadastro
-UPDATE clientes SET telefone = '(41) 99000-0004' WHERE id = 4;
--- Exclusão: cadastro duplicado de cliente criado por engano
-INSERT INTO clientes (id, nome) VALUES (9, 'Cliente Duplicado');
-DELETE FROM clientes WHERE id = 9;
+--
+-- Despejando dados para a tabela `clientes`
+--
 
--- =====================================================================
--- 3) DQL - consultas estratégicas
--- =====================================================================
+INSERT INTO `clientes` (`id`, `nome`, `telefone`, `criado_em`) VALUES
+(1, 'Carlos Almeida', '(41) 99000-0001', '2026-11-10 19:36:52'),
+(2, 'Fernanda Souza', '(41) 99000-0002', '2026-11-10 19:36:52'),
+(3, 'João Pereira', '(41) 99000-0003', '2026-11-10 19:36:52'),
+(4, 'Mariana Costa', '(41) 99000-0004', '2026-11-10 19:36:52'),
+(5, 'Ricardo Lima', '(41) 99000-0005', '2026-11-10 19:36:52'),
+(6, 'Patrícia Rocha', NULL, '2026-11-10 19:36:52'),
+(7, 'Bruno Carvalho', '(41) 99000-0007', '2026-11-10 19:36:52'),
+(8, 'Juliana Martins', '(41) 99000-0008', '2026-11-10 19:36:52');
 
--- Q1. Relatório de comandas: cliente, atendente e total (JOIN de 4 tabelas)
-SELECT c.id AS comanda, cl.nome AS cliente, u.nome AS atendente, c.status,
-       c.aberta_em, SUM(i.quantidade * i.valor_unitario) AS total
-  FROM comandas c
-  JOIN clientes cl ON cl.id = c.cliente_id
-  JOIN usuarios u  ON u.id  = c.usuario_id
-  JOIN itens_comanda i ON i.comanda_id = c.id
- GROUP BY c.id, cl.nome, u.nome, c.status, c.aberta_em
- ORDER BY c.aberta_em;
+-- --------------------------------------------------------
 
--- Q2. Comandas de um período (1ª quinzena de outubro/2026: dias 01 a 15) com a quantidade de itens
-SELECT c.id AS comanda, cl.nome AS cliente, c.aberta_em,
-       SUM(i.quantidade) AS qtd_itens
-  FROM comandas c
-  JOIN clientes cl ON cl.id = c.cliente_id
-  JOIN itens_comanda i ON i.comanda_id = c.id
- WHERE c.aberta_em BETWEEN '2026-10-01 00:00:00' AND '2026-10-15 23:59:59'
- GROUP BY c.id, cl.nome, c.aberta_em
- ORDER BY c.aberta_em;
+--
+-- Estrutura para tabela `comandas`
+--
 
--- Q3. Produtos mais vendidos (somente comandas fechadas ou em fiado)
-SELECT p.nome AS produto, ct.nome AS categoria,
-       SUM(i.quantidade) AS qtd_vendida,
-       SUM(i.quantidade * i.valor_unitario) AS receita
-  FROM itens_comanda i
-  JOIN produtos p    ON p.id  = i.produto_id
-  JOIN categorias ct ON ct.id = p.categoria_id
-  JOIN comandas c    ON c.id  = i.comanda_id
- WHERE c.status IN ('fechada','fiado')
- GROUP BY p.id, p.nome, ct.nome
- ORDER BY qtd_vendida DESC
- LIMIT 5;
+CREATE TABLE `comandas` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `cliente_id` int(10) UNSIGNED NOT NULL,
+  `usuario_id` int(10) UNSIGNED NOT NULL,
+  `status` enum('aberta','fechada','fiado','cancelada') NOT NULL DEFAULT 'aberta',
+  `aberta_em` datetime NOT NULL DEFAULT current_timestamp(),
+  `fechada_em` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Q4. Faturamento por categoria
-SELECT ct.nome AS categoria,
-       SUM(i.quantidade * i.valor_unitario) AS faturamento
-  FROM categorias ct
-  JOIN produtos p       ON p.categoria_id = ct.id
-  JOIN itens_comanda i  ON i.produto_id = p.id
-  JOIN comandas c       ON c.id = i.comanda_id
- WHERE c.status <> 'cancelada'
- GROUP BY ct.id, ct.nome
- ORDER BY faturamento DESC;
+--
+-- Despejando dados para a tabela `comandas`
+--
 
--- Q5. Recebimentos por forma de pagamento
-SELECT p.metodo, COUNT(*) AS qtd_pagamentos, SUM(p.valor) AS total_recebido
-  FROM pagamentos p
- GROUP BY p.metodo
- ORDER BY total_recebido DESC;
+INSERT INTO `comandas` (`id`, `cliente_id`, `usuario_id`, `status`, `aberta_em`, `fechada_em`) VALUES
+(1, 1, 2, 'fechada', '2026-10-05 19:10:00', '2026-10-05 20:45:00'),
+(2, 2, 2, 'fechada', '2026-10-05 20:30:00', '2026-10-05 21:50:00'),
+(3, 3, 3, 'fechada', '2026-10-06 18:45:00', '2026-10-06 20:35:00'),
+(4, 4, 3, 'fechada', '2026-10-10 21:00:00', '2026-10-10 22:00:00'),
+(5, 5, 2, 'fiado', '2026-10-12 17:20:00', NULL),
+(6, 6, 2, 'fechada', '2026-10-14 19:50:00', '2026-10-14 20:35:00'),
+(7, 7, 3, 'fechada', '2026-10-17 20:15:00', '2026-10-17 22:25:00'),
+(8, 8, 3, 'fechada', '2026-10-19 22:00:00', '2026-10-19 23:10:00'),
+(9, 1, 2, 'fechada', '2026-10-24 18:30:00', '2026-10-24 19:20:00'),
+(10, 2, 3, 'aberta', '2026-10-26 19:40:00', NULL),
+(11, 3, 2, 'aberta', '2026-10-28 20:05:00', NULL),
+(12, 4, 3, 'cancelada', '2026-10-29 21:10:00', NULL),
+(13, 5, 2, 'fechada', '2026-09-18 19:00:00', '2026-09-18 20:10:00'),
+(14, 6, 3, 'fechada', '2026-09-27 21:30:00', '2026-09-27 22:40:00'),
+(15, 7, 2, 'fechada', '2026-11-02 18:20:00', '2026-11-02 19:30:00'),
+(16, 8, 3, 'fechada', '2026-11-05 20:00:00', '2026-11-10 19:36:52');
 
--- Q6. Desempenho dos atendentes (inclui quem não abriu nenhuma comanda)
-SELECT u.nome AS atendente, u.status_conta,
-       COUNT(DISTINCT c.id) AS comandas_abertas,
-       COALESCE(SUM(v.total), 0) AS valor_total
-  FROM usuarios u
-  LEFT JOIN comandas c ON c.usuario_id = u.id
-  LEFT JOIN vw_resumo_comandas v ON v.comanda_id = c.id
- WHERE u.perfil = 'atendente'
- GROUP BY u.id, u.nome, u.status_conta
- ORDER BY valor_total DESC;
+-- --------------------------------------------------------
 
--- Q7. Saldo devedor das comandas em fiado (total - pago), por cliente
-SELECT cl.nome AS cliente, cl.telefone, v.comanda_id,
-       v.total, v.pago, (v.total - v.pago) AS saldo_devedor
-  FROM vw_resumo_comandas v
-  JOIN comandas c   ON c.id = v.comanda_id
-  JOIN clientes cl  ON cl.id = c.cliente_id
- WHERE c.status = 'fiado' AND v.total > v.pago;
+--
+-- Estrutura para tabela `itens_comanda`
+--
 
--- Q8. Produtos que nunca foram vendidos (LEFT JOIN + IS NULL)
-SELECT p.id, p.nome, p.valor, p.ativo
-  FROM produtos p
-  LEFT JOIN itens_comanda i ON i.produto_id = p.id
- WHERE i.id IS NULL;
+CREATE TABLE `itens_comanda` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `comanda_id` int(10) UNSIGNED NOT NULL,
+  `produto_id` int(10) UNSIGNED NOT NULL,
+  `quantidade` int(10) UNSIGNED NOT NULL,
+  `valor_unitario` decimal(10,2) NOT NULL
+) ;
 
--- Q9. Clientes que gastaram acima da média das comandas (subconsulta)
-SELECT cl.nome AS cliente, SUM(v.total) AS total_gasto
-  FROM clientes cl
-  JOIN comandas c ON c.cliente_id = cl.id
-  JOIN vw_resumo_comandas v ON v.comanda_id = c.id
- WHERE c.status <> 'cancelada'
- GROUP BY cl.id, cl.nome
-HAVING SUM(v.total) > (SELECT AVG(total) FROM vw_resumo_comandas WHERE status <> 'cancelada')
- ORDER BY total_gasto DESC;
+--
+-- Despejando dados para a tabela `itens_comanda`
+--
 
--- Q10. Faturamento por mês (GROUP BY + HAVING)
--- Agrupa as comandas não canceladas pelo mês de abertura (DATE_FORMAT) e soma
--- os totais da view. O HAVING filtra DEPOIS do agrupamento (o WHERE filtra antes),
--- mantendo apenas os meses com faturamento acima de R$ 100,00.
-SELECT DATE_FORMAT(c.aberta_em, '%Y-%m') AS mes,
-       COUNT(*)                          AS qtd_comandas,
-       SUM(v.total)                      AS faturamento
-  FROM comandas c
-  JOIN vw_resumo_comandas v ON v.comanda_id = c.id
- WHERE c.status <> 'cancelada'
- GROUP BY DATE_FORMAT(c.aberta_em, '%Y-%m')
-HAVING SUM(v.total) > 100
- ORDER BY mes;
+INSERT INTO `itens_comanda` (`id`, `comanda_id`, `produto_id`, `quantidade`, `valor_unitario`) VALUES
+(1, 1, 1, 4, 5.50),
+(2, 1, 8, 1, 25.00),
+(3, 2, 2, 3, 8.50),
+(4, 2, 11, 2, 7.00),
+(5, 3, 3, 2, 12.00),
+(6, 3, 9, 1, 22.00),
+(7, 3, 5, 1, 12.00),
+(8, 4, 4, 2, 5.00),
+(9, 4, 13, 5, 2.00),
+(10, 5, 1, 6, 5.50),
+(11, 5, 10, 1, 30.00),
+(12, 6, 7, 2, 11.00),
+(13, 6, 12, 2, 6.50),
+(14, 7, 2, 6, 8.50),
+(15, 7, 8, 2, 25.00),
+(16, 8, 3, 3, 12.00),
+(17, 8, 6, 2, 3.50),
+(18, 9, 1, 5, 6.00),
+(19, 9, 11, 1, 7.00),
+(20, 10, 2, 2, 8.50),
+(21, 10, 9, 1, 22.00),
+(22, 11, 5, 1, 12.00),
+(23, 11, 8, 1, 25.00),
+(24, 12, 4, 1, 5.00),
+(25, 13, 3, 4, 12.00),
+(26, 13, 8, 1, 25.00),
+(27, 14, 15, 2, 14.00),
+(28, 14, 16, 1, 9.00),
+(29, 15, 18, 1, 55.00),
+(30, 15, 19, 2, 12.00),
+(31, 16, 2, 2, 8.50),
+(32, 16, 8, 1, 25.00);
 
--- Q11. Ranking de clientes por valor gasto (subconsulta)
--- A subconsulta na cláusula FROM (tabela derivada "t") calcula o gasto de cada
--- cliente; a consulta externa numera o ranking com RANK() e calcula a
--- participação de cada um com uma subconsulta escalar (total geral).
-SELECT RANK() OVER (ORDER BY t.total_gasto DESC) AS posicao,
-       t.cliente, t.qtd_comandas, t.total_gasto,
-       ROUND(100 * t.total_gasto /
-             (SELECT SUM(total) FROM vw_resumo_comandas WHERE status <> 'cancelada'), 1) AS percentual
-  FROM (SELECT cl.nome AS cliente, COUNT(*) AS qtd_comandas, SUM(v.total) AS total_gasto
-          FROM clientes cl
-          JOIN comandas c ON c.cliente_id = cl.id
-          JOIN vw_resumo_comandas v ON v.comanda_id = c.id
-         WHERE c.status <> 'cancelada'
-         GROUP BY cl.id, cl.nome) t
- ORDER BY posicao, t.cliente;
+-- --------------------------------------------------------
 
--- Q12. Consulta que usa a VIEW: situação financeira por status de comanda
--- A view já traz total e pago de cada comanda; aqui só agrupamos por status,
--- sem repetir a lógica de soma dos itens e dos pagamentos.
-SELECT v.status,
-       COUNT(*)                  AS qtd_comandas,
-       SUM(v.total)              AS total,
-       SUM(v.pago)               AS pago,
-       SUM(v.total - v.pago)     AS a_receber
-  FROM vw_resumo_comandas v
- GROUP BY v.status
- ORDER BY total DESC;
+--
+-- Estrutura para tabela `pagamentos`
+--
+
+CREATE TABLE `pagamentos` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `comanda_id` int(10) UNSIGNED NOT NULL,
+  `usuario_id` int(10) UNSIGNED NOT NULL,
+  `metodo` enum('pix','dinheiro','cartao_credito','cartao_debito') NOT NULL,
+  `valor` decimal(10,2) NOT NULL,
+  `pago_em` datetime NOT NULL DEFAULT current_timestamp()
+) ;
+
+--
+-- Despejando dados para a tabela `pagamentos`
+--
+
+INSERT INTO `pagamentos` (`id`, `comanda_id`, `usuario_id`, `metodo`, `valor`, `pago_em`) VALUES
+(1, 1, 2, 'pix', 47.00, '2026-10-05 20:45:00'),
+(2, 2, 2, 'dinheiro', 39.50, '2026-10-05 21:50:00'),
+(3, 3, 3, 'pix', 30.00, '2026-10-06 20:25:00'),
+(4, 3, 3, 'cartao_debito', 28.00, '2026-10-06 20:35:00'),
+(5, 4, 3, 'dinheiro', 20.00, '2026-10-10 22:00:00'),
+(6, 5, 2, 'dinheiro', 20.00, '2026-10-12 19:20:00'),
+(7, 6, 2, 'cartao_debito', 35.00, '2026-10-14 20:35:00'),
+(8, 7, 3, 'pix', 101.00, '2026-10-17 22:25:00'),
+(9, 8, 3, 'cartao_credito', 43.00, '2026-10-19 23:10:00'),
+(10, 9, 2, 'dinheiro', 37.00, '2026-10-24 19:20:00'),
+(11, 13, 2, 'pix', 73.00, '2026-09-18 20:10:00'),
+(12, 14, 3, 'cartao_credito', 37.00, '2026-09-27 22:40:00'),
+(13, 15, 2, 'pix', 79.00, '2026-11-02 19:30:00'),
+(14, 16, 3, 'pix', 20.00, '2026-11-10 19:36:52'),
+(15, 16, 3, 'dinheiro', 22.00, '2026-11-10 19:36:52');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `produtos`
+--
+
+CREATE TABLE `produtos` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `categoria_id` int(10) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `valor` decimal(10,2) NOT NULL,
+  `imagem` varchar(255) NOT NULL DEFAULT 'assets/default.png',
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ;
+
+--
+-- Despejando dados para a tabela `produtos`
+--
+
+INSERT INTO `produtos` (`id`, `categoria_id`, `nome`, `valor`, `imagem`, `ativo`, `criado_em`) VALUES
+(1, 1, 'Cerveja Lata 350ml', 6.00, 'assets/uploads/cerveja-lata.png', 1, '2026-11-10 19:36:52'),
+(2, 1, 'Cerveja Long Neck', 8.50, 'assets/uploads/long-neck-sol-1780914669.webp', 1, '2026-11-10 19:36:52'),
+(3, 1, 'Cerveja Garrafa 600ml', 12.00, 'assets/uploads/brahma-garrafa-1780914618.jpg', 1, '2026-11-10 19:36:52'),
+(4, 2, 'Refrigerante Lata 350ml', 5.00, 'assets/uploads/refri.png', 1, '2026-11-10 19:36:52'),
+(5, 2, 'Refrigerante 2L', 12.00, 'assets/uploads/sprite-2l-1780914972.jpg', 1, '2026-11-10 19:36:52'),
+(6, 3, 'Água Mineral 500ml', 3.50, 'assets/uploads/--gua-mineral-500ml-1780915049.jpg', 1, '2026-11-10 19:36:52'),
+(7, 3, 'Energético 473ml', 11.00, 'assets/uploads/monster-473ml-1780915205.png', 1, '2026-11-10 19:36:52'),
+(8, 4, 'Porção de Fritas', 25.00, 'assets/uploads/fritas--1780914501.png', 1, '2026-11-10 19:36:52'),
+(9, 4, 'X-Bacon', 22.00, 'assets/uploads/x-bacon-1780761286.png', 1, '2026-11-10 19:36:52'),
+(10, 4, 'Porção de Calabresa', 30.00, 'assets/uploads/calabresa.png', 1, '2026-11-10 19:36:52'),
+(11, 5, 'Salgadinho 60g', 7.00, 'assets/uploads/doritos-1780914737.jpg', 1, '2026-11-10 19:36:52'),
+(12, 5, 'Chocolate em Barra', 6.50, 'assets/uploads/kitkat-1780914842.jpg', 1, '2026-11-10 19:36:52'),
+(13, 6, 'Ficha de Sinuca', 2.00, 'assets/uploads/ficha-de-sinuca-1780919445.webp', 1, '2026-11-10 19:36:52'),
+(14, 4, 'Petisco da Casa', 18.00, 'assets/default.png', 0, '2026-11-10 19:36:52'),
+(15, 1, 'Cerveja Litrão', 14.00, 'assets/uploads/brahma-litr--o-1780760328.png', 1, '2026-11-10 19:36:52'),
+(16, 2, 'Coca-Cola 1L', 9.00, 'assets/uploads/coca-cola-1l-1780914940.jpg', 1, '2026-11-10 19:36:52'),
+(17, 5, 'Cebolitos 60g', 6.50, 'assets/uploads/cebolitos-1780914779.jpg', 1, '2026-11-10 19:36:52'),
+(18, 7, 'Smirnoff 1L', 55.00, 'assets/uploads/smirnoff-1l-1780915114.jpg', 1, '2026-11-10 19:36:52'),
+(19, 7, 'Ice Big Apple', 12.00, 'assets/uploads/ice-kislla-big-apple-1780915250.jpg', 1, '2026-11-10 19:36:52');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `usuarios`
+--
+
+CREATE TABLE `usuarios` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `senha_hash` varchar(255) NOT NULL,
+  `perfil` enum('admin','atendente') NOT NULL DEFAULT 'atendente',
+  `status_conta` enum('ativo','inativo') NOT NULL DEFAULT 'ativo',
+  `criado_em` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `usuarios`
+--
+
+INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha_hash`, `perfil`, `status_conta`, `criado_em`) VALUES
+(1, 'Administrador', 'admin@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'admin', 'ativo', '2026-11-10 19:36:52'),
+(2, 'Ana Atendente', 'ana@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'ativo', '2026-11-10 19:36:52'),
+(3, 'Pedro Atendente', 'pedro@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'ativo', '2026-11-10 19:36:52'),
+(4, 'Lucas Desligado', 'lucas@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'inativo', '2026-11-10 19:36:52');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura stand-in para view `vw_resumo_comandas`
+-- (Veja abaixo para a visão atual)
+--
+CREATE TABLE `vw_resumo_comandas` (
+`comanda_id` int(10) unsigned
+,`status` enum('aberta','fechada','fiado','cancelada')
+,`aberta_em` datetime
+,`total` decimal(42,2)
+,`pago` decimal(32,2)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para view `vw_resumo_comandas`
+--
+DROP TABLE IF EXISTS `vw_resumo_comandas`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_resumo_comandas`  AS SELECT `c`.`id` AS `comanda_id`, `c`.`status` AS `status`, `c`.`aberta_em` AS `aberta_em`, coalesce((select sum(`i`.`quantidade` * `i`.`valor_unitario`) from `itens_comanda` `i` where `i`.`comanda_id` = `c`.`id`),0) AS `total`, coalesce((select sum(`p`.`valor`) from `pagamentos` `p` where `p`.`comanda_id` = `c`.`id`),0) AS `pago` FROM `comandas` AS `c` ;
+
+--
+-- Índices para tabelas despejadas
+--
+
+--
+-- Índices de tabela `categorias`
+--
+ALTER TABLE `categorias`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_categorias_nome` (`nome`);
+
+--
+-- Índices de tabela `clientes`
+--
+ALTER TABLE `clientes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Índices de tabela `comandas`
+--
+ALTER TABLE `comandas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_comandas_cliente` (`cliente_id`),
+  ADD KEY `fk_comandas_usuario` (`usuario_id`),
+  ADD KEY `idx_comandas_status_data` (`status`,`aberta_em`);
+
+--
+-- Índices de tabela `itens_comanda`
+--
+ALTER TABLE `itens_comanda`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_itens_comanda` (`comanda_id`),
+  ADD KEY `fk_itens_produto` (`produto_id`);
+
+--
+-- Índices de tabela `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_pagamentos_comanda` (`comanda_id`),
+  ADD KEY `fk_pagamentos_usuario` (`usuario_id`),
+  ADD KEY `idx_pagamentos_pago_em` (`pago_em`);
+
+--
+-- Índices de tabela `produtos`
+--
+ALTER TABLE `produtos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_produtos_categoria` (`categoria_id`),
+  ADD KEY `idx_produtos_nome` (`nome`);
+
+--
+-- Índices de tabela `usuarios`
+--
+ALTER TABLE `usuarios`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_usuarios_email` (`email`);
+
+--
+-- AUTO_INCREMENT para tabelas despejadas
+--
+
+--
+-- AUTO_INCREMENT de tabela `categorias`
+--
+ALTER TABLE `categorias`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT de tabela `clientes`
+--
+ALTER TABLE `clientes`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT de tabela `comandas`
+--
+ALTER TABLE `comandas`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+
+--
+-- AUTO_INCREMENT de tabela `itens_comanda`
+--
+ALTER TABLE `itens_comanda`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `produtos`
+--
+ALTER TABLE `produtos`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `usuarios`
+--
+ALTER TABLE `usuarios`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- Restrições para tabelas despejadas
+--
+
+--
+-- Restrições para tabelas `comandas`
+--
+ALTER TABLE `comandas`
+  ADD CONSTRAINT `fk_comandas_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_comandas_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `itens_comanda`
+--
+ALTER TABLE `itens_comanda`
+  ADD CONSTRAINT `fk_itens_comanda` FOREIGN KEY (`comanda_id`) REFERENCES `comandas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_itens_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `pagamentos`
+--
+ALTER TABLE `pagamentos`
+  ADD CONSTRAINT `fk_pagamentos_comanda` FOREIGN KEY (`comanda_id`) REFERENCES `comandas` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pagamentos_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `produtos`
+--
+ALTER TABLE `produtos`
+  ADD CONSTRAINT `fk_produtos_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias` (`id`) ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

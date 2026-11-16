@@ -37,7 +37,6 @@ Banco de dados (XAMPP padrão): usuário `root`, **sem senha** (configurado em `
 - Banco `sistema_gestao_a3`: DDL, DML e DQL (12 consultas), view e 3 procedures com transação.
 - API REST com GET/POST/PUT/DELETE nas 7 tabelas, JWT, permissões e 7 relatórios.
 - Protótipo: login, CRUD, comandas (itens, pagamento dividido, fiado, cancelar), relatórios, responsivo.
-- Testes: `C:\xampp\php\php.exe dev\tests\teste_api.php` → 74 verificações, 0 falhas.
 - Rascunhos em `docs/`: `relatorio_tecnico.md`, `slide.md` e `perguntas_banca.md`.
 - Collection do Postman (opcional): `dev/postman/` — testada no Runner: 50 de 50 testes passaram.
 
@@ -60,7 +59,7 @@ Preencham o responsável e a data de cada item. (A API e o protótipo já foram 
 
 - [ ] Relatório técnico (Word/PDF) com os DERs conceitual e lógico
 - [ ] `dev/db/sistema_gestao_a3.sql` (DDL + DML + DQL executáveis)
-- [ ] Código-fonte (zip do repositório: `dev/api`, `dev/prototipo`, `dev/db`, `dev/tests`, `dev/assets`, `README_A3.md`)
+- [ ] Código-fonte (zip do repositório: `dev/api`, `dev/prototipo`, `dev/db`, `dev/assets`, `README_A3.md`)
 - [ ] Apresentação em PowerPoint
 - [ ] Collection do Postman (`dev/postman/`) — opcional
 

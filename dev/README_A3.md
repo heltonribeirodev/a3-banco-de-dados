@@ -13,14 +13,13 @@ dev/
   db/                sistema_gestao_a3.sql (DDL + DML + DQL) e DER (.mmd e .png)
   prototipo/         interface oficial (index.html, css/estilo.css, js/*.js)
   postman/           collection do Postman (material extra, opcional)
-  tests/             teste_api.php (testes automatizados da API)
   README_A3.md       este arquivo
 docs/                relatório técnico, roteiro da apresentação, perguntas da banca
 ```
 
 ## Como executar (XAMPP / Windows)
 
-Requisitos: PHP 8.1+, MySQL 8 ou MariaDB 10.4+ (o XAMPP já traz), extensão `curl` do PHP para os testes.
+Requisitos: PHP 8.1+, MySQL 8 ou MariaDB 10.4+ (o XAMPP já traz).
 
 1. Inicie **Apache** e **MySQL** no painel do XAMPP.
 2. Importe o banco: phpMyAdmin → **Importar** → `dev/db/sistema_gestao_a3.sql`.
@@ -146,8 +145,9 @@ autorização de verdade é sempre da API.
 
 ## Testes
 
-Com o Apache e o MySQL ligados e o banco importado: `C:\xampp\php\php.exe dev\tests\teste_api.php`.
-O script cria e remove os próprios dados de teste (veja `dev/tests/teste_api.php`).
+A collection do Postman (`dev/postman/`) cobre login, GET/POST/PUT/DELETE das sete tabelas, a regra de
+pagamento acima do saldo e os sete relatórios; ao rodar no **Runner**, os 50 testes passaram. O protótipo também
+foi conferido manualmente no navegador.
 
 ## Limitações conhecidas
 

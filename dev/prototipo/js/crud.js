@@ -1,24 +1,13 @@
-/**
- * crud.js — motor genérico de CRUD.
- *
- * Uma única tela serve para categorias, produtos, clientes, usuários e pagamentos.
- * Tudo é guiado pela documentação devolvida por GET / da API: campos (tipo,
- * obrigatório, mínimo, máximo...), filtros, colunas ordenáveis e permissões.
- * Se a API ganhar um campo novo, o formulário e a tabela passam a exibi-lo sem
- * alterar este arquivo.
- */
 const Crud = {
-  rec: null,        // recurso aberto (ex.: "produtos")
-  estado: {},       // por recurso: { pagina, filtros, ordem, direcao } — lembra a busca ao trocar de aba
-  meta: null,       // paginação da última listagem
-  editando: null,   // registro em edição (null = novo)
+  rec: null,
+  estado: {},
+  meta: null,
+  editando: null,
   temporizador: null,
 
   get doc() { return App.docs[this.rec]; },
 
-  // -------------------------------------------------------------------------
-  // Abertura da tela e listagem
-  // -------------------------------------------------------------------------
+
   async abrir(rec) {
     this.rec = rec;
     if (!this.estado[rec]) this.estado[rec] = { pagina: 1, filtros: {}, ordem: '', direcao: 'asc' };
@@ -29,14 +18,13 @@ const Crud = {
     await this.listar();
   },
 
-  /** Monta os campos de filtro a partir da lista "filtros" da documentação. */
   async montarFiltros() {
     const form = document.getElementById('crudFiltros');
     form.innerHTML = '';
     const salvo = this.estado[this.rec].filtros;
 
     for (const nome of this.doc.filtros) {
-      const campo = this.doc.campos[nome];               // pode não existir (ex.: q, data_inicio)
+      const campo = this.doc.campos[nome];
       const div = document.createElement('div');
       const rotulo = { q: 'Buscar', data_inicio: 'De', data_fim: 'Até' }[nome] || nome;
       div.innerHTML = '<label>' + Util.esc(rotulo) + '</label>';
@@ -101,12 +89,11 @@ const Crud = {
     lista.innerHTML = h + '</tbody></table>';
   },
 
-  /** Formata o valor de uma célula (já escapado). */
   celula(coluna, valor) {
     if (valor === null || valor === undefined) return '—';
     const campo = this.doc.campos[coluna] || {};
     if (coluna === 'imagem') {
-      // o caminho gravado no banco é relativo à pasta dev/ (um nível acima do protótipo)
+      // o caminho gravado no banco é relativo à pasta dev/
       return '<img class="miniatura" src="../' + Util.esc(valor) + '" alt="" loading="lazy"> ' + Util.esc(valor);
     }
     if (typeof valor === 'boolean') return valor ? 'Sim' : 'Não';
@@ -122,9 +109,6 @@ const Crud = {
     document.getElementById('crudProx').disabled = m.pagina >= m.paginas;
   },
 
-  // -------------------------------------------------------------------------
-  // Formulário gerado a partir dos campos da documentação
-  // -------------------------------------------------------------------------
   async abrirForm(registro) {
     this.editando = registro;
     document.getElementById('crudFormTitulo').textContent =
@@ -147,7 +131,6 @@ const Crud = {
     document.getElementById('dlgForm').showModal();
   },
 
-  /** <select> para enum, bool e chave estrangeira. */
   async criarSelect(campo, filtro) {
     const sel = document.createElement('select');
     sel.innerHTML = '<option value="">' + (filtro ? 'Todos' : '— (padrão)') + '</option>';
@@ -160,7 +143,7 @@ const Crud = {
       try {
         const dados = await Api.listarTodos(campo.tabela);
         opcoes = dados.map(d => [d.id, '#' + d.id + ' ' + (d.nome || d.cliente_nome || '') + (d.status ? ' (' + d.status + ')' : '')]);
-      } catch (e) { /* a mensagem de erro já aparece no painel de log */ }
+      } catch (e) { this.mensagem('erro', 'Não foi possível carregar os valores de ' + campo.tabela + ': ' + Api.mensagemErro(e)); }
     }
     opcoes.forEach(([v, t]) => {
       const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o);
@@ -188,7 +171,7 @@ const Crud = {
     return el;
   },
 
-  /** Validação no cliente. Devolve { corpo, erros }. A API valida de novo (a regra final é dela). */
+  /** Validação no cliente */
   validar() {
     const corpo = {}, erros = {};
     document.querySelectorAll('#crudCampos [name]').forEach(el => {
@@ -199,7 +182,7 @@ const Crud = {
 
       if (v === '') {
         if (obrigatorio) erros[nome] = 'Campo obrigatório.';
-        else if (this.editando && c.anulavel) corpo[nome] = '';     // limpar um campo opcional
+        else if (this.editando && c.anulavel) corpo[nome] = '';
         return;
       }
       if (['int', 'fk', 'decimal'].includes(c.tipo)) {
@@ -247,7 +230,7 @@ const Crud = {
       this.mensagem('ok', 'Registro salvo com sucesso.');
       await this.listar();
     } catch (e) {
-      if (e.status === 422 && e.detalhes) this.mostrarErrosCampos(e.detalhes);   // erro por campo vindo da API
+      if (e.status === 422 && e.detalhes) this.mostrarErrosCampos(e.detalhes);
       Util.aviso(document.getElementById('crudFormMsg'), 'erro', Api.mensagemErro(e));
     }
   },
@@ -261,12 +244,9 @@ const Crud = {
       const e = this.estado[this.rec];
       if (this.meta.total - 1 <= (e.pagina - 1) * 10 && e.pagina > 1) e.pagina--;
       await this.listar();
-    } catch (erro) { this.mensagem('erro', Api.mensagemErro(erro)); }   // ex.: 409 produto com vendas
+    } catch (erro) { this.mensagem('erro', Api.mensagemErro(erro)); }
   },
 
-  // -------------------------------------------------------------------------
-  // Eventos (ligados uma única vez pelo App)
-  // -------------------------------------------------------------------------
   iniciar() {
     const $ = id => document.getElementById(id);
 
@@ -275,7 +255,6 @@ const Crud = {
     $('crudProx').addEventListener('click', () => { this.estado[this.rec].pagina++; this.listar(); });
     $('crudForm').addEventListener('submit', ev => { ev.preventDefault(); this.salvar(); });
 
-    // filtros: aplica 300 ms depois da última digitação
     $('crudFiltros').addEventListener('input', () => {
       clearTimeout(this.temporizador);
       this.temporizador = setTimeout(() => {

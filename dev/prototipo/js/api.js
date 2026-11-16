@@ -1,28 +1,16 @@
-/**
- * api.js — comunicação com a API REST e utilitários de apresentação.
- *
- *  - Api:  fetch com token, tratamento de erros, indicador de carregamento
- *          e registro da requisição/resposta no painel de log.
- *  - Util: funções pequenas de formatação e de proteção contra XSS.
- */
-
-// ---------------------------------------------------------------------------
-// Util
-// ---------------------------------------------------------------------------
 const Util = {
-  /** Escapa HTML: TODO texto vindo da API ou do usuário passa por aqui antes de entrar em innerHTML (evita XSS). */
   esc(valor) {
     return String(valor == null ? '' : valor)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   },
 
-  /** 12.5 -> "R$ 12,50" */
+  /** transforma um número em moeda brasileira */
   moeda(n) {
     return Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   },
 
-  /** "2026-10-05 19:10:00" -> "05/10/2026 19:10" */
+  /** transformar data e hora para padrão brasileiro */
   dataHora(s) {
     if (!s) return '—';
     const [data, hora] = String(s).split(' ');
@@ -30,15 +18,10 @@ const Util = {
     return d + '/' + m + '/' + a + (hora ? ' ' + hora.slice(0, 5) : '');
   },
 
-  /** Mostra uma mensagem (tipo: 'ok', 'erro' ou 'aviso') dentro de um elemento. */
   aviso(el, tipo, texto) {
     el.innerHTML = '<div class="msg ' + tipo + '" role="alert">' + Util.esc(texto) + '</div>';
   },
 };
-
-// ---------------------------------------------------------------------------
-// Api
-// ---------------------------------------------------------------------------
 
 /** Erro devolvido pela API (ou falha de rede, com status 0). */
 class ErroApi extends Error {
@@ -51,19 +34,15 @@ class ErroApi extends Error {
 
 const Api = {
   base: '../api/v1',
-  token: sessionStorage.getItem('token'),   // o token fica só na aba aberta
-  aoExpirar: null,                          // função chamada quando a API responde 401
-  pendentes: 0,                             // requisições em andamento (indicador de carregamento)
+  token: sessionStorage.getItem('token'),
+  aoExpirar: null,
+  pendentes: 0,
 
   guardarToken(token) {
     this.token = token;
     if (token) sessionStorage.setItem('token', token); else sessionStorage.removeItem('token');
   },
 
-  /**
-   * Faz uma chamada à API e devolve o JSON da resposta.
-   * Lança ErroApi para qualquer status fora de 2xx.
-   */
   async chamar(metodo, caminho, corpo) {
     const url = this.base + caminho;
     const opcoes = { method: metodo, headers: { Accept: 'application/json' } };
@@ -79,7 +58,7 @@ const Api = {
     try {
       resposta = await fetch(url, opcoes);
       const texto = await resposta.text();
-      try { json = texto ? JSON.parse(texto) : null; } catch (e) { /* resposta sem JSON */ }
+      try { json = texto ? JSON.parse(texto) : null; } catch (e) {}
     } catch (e) {
       this.registrar(metodo, url, corpo, 0, 'Falha de conexão', null);
       throw new ErroApi(0, 'Não foi possível conectar à API. Verifique se o Apache e o MySQL estão ligados.');
@@ -89,7 +68,6 @@ const Api = {
 
     this.registrar(metodo, url, corpo, resposta.status, resposta.statusText, json);
     if (!resposta.ok) {
-      // 401 fora do login = sessão expirada: volta para a tela de entrada
       if (resposta.status === 401 && caminho !== '/auth/login' && this.aoExpirar) this.aoExpirar();
       throw new ErroApi(resposta.status, (json && json.erro) || 'Erro ' + resposta.status, json && json.detalhes);
     }
@@ -101,7 +79,6 @@ const Api = {
   put(caminho, corpo)  { return this.chamar('PUT', caminho, corpo); },
   delete(caminho)      { return this.chamar('DELETE', caminho); },
 
-  /** Monta "?a=1&b=2" ignorando valores vazios. */
   consulta(params) {
     const p = new URLSearchParams();
     Object.entries(params || {}).forEach(([k, v]) => { if (v !== '' && v != null) p.set(k, v); });
@@ -109,7 +86,6 @@ const Api = {
     return s ? '?' + s : '';
   },
 
-  /** Lista todos os registros de um recurso (página a página, 100 por vez). Usado nos <select>. */
   async listarTodos(recurso, params) {
     let pagina = 1, todos = [], meta;
     do {
@@ -121,7 +97,6 @@ const Api = {
     return todos;
   },
 
-  /** Texto de erro para o usuário, sempre com o código HTTP visível. */
   mensagemErro(e) {
     const nomes = {
       0: 'Sem conexão', 400: 'Requisição inválida (400)', 401: 'Não autenticado (401)',
@@ -135,7 +110,6 @@ const Api = {
     return t;
   },
 
-  /** Painel de requisição/resposta, útil para acompanhar o CRUD na demonstração. */
   registrar(metodo, url, corpo, status, statusTexto, json) {
     document.getElementById('logCard').hidden = false;
     document.getElementById('reqlinha').innerHTML =

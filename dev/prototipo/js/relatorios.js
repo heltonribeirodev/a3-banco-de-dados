@@ -1,19 +1,10 @@
-/**
- * relatorios.js — tela de relatórios.
- *
- * Consome GET /relatorios/{nome}. A lista de relatórios e os parâmetros que
- * cada um aceita vêm de GET / (documentação da API), então o seletor de
- * período só aparece nos relatórios que realmente o aceitam.
- */
 const Relatorios = {
-  docs: {},   // documentação dos relatórios (GET /)
+  docs: {}, 
 
   $(id) { return document.getElementById(id); },
 
-  /** Colunas que representam dinheiro (formatadas como R$). */
   MONETARIAS: ['total', 'pago', 'receita', 'faturamento', 'total_recebido', 'saldo_devedor', 'valor_total'],
 
-  /** Rótulos dos parâmetros. */
   ROTULOS: { data_inicio: 'De', data_fim: 'Até', limite: 'Limite de linhas', minimo: 'Faturamento mínimo (R$)' },
 
   abrir() {
@@ -27,7 +18,6 @@ const Relatorios = {
     this.$('relMsg').innerHTML = '';
   },
 
-  /** Mostra apenas os campos de filtro que o relatório escolhido aceita. */
   montarParametros() {
     const doc = this.docs[this.$('relNome').value];
     this.$('relDescricao').textContent = doc.descricao;

@@ -1,25 +1,18 @@
-/**
- * app.js — inicialização: login, sessão, abas e permissões.
- * É o único arquivo que conhece todas as telas.
- */
 const App = {
-  usuario: null,       // { id, nome, email, perfil }
-  docs: {},            // recursos documentados em GET /
-  relatorios: {},      // relatórios documentados em GET /
+  usuario: null, 
+  docs: {},
+  relatorios: {},
   aba: null,
 
-  /** Recursos atendidos pelo motor genérico de CRUD (comandas e itens têm tela própria). */
   CRUD: ['categorias', 'produtos', 'clientes', 'usuarios', 'pagamentos'],
 
   $(id) { return document.getElementById(id); },
 
-  /** O usuário logado pode executar esta ação neste recurso? (regra vem da API, em GET /) */
   pode(recurso, acao) {
     const regra = this.docs[recurso] && this.docs[recurso].permissoes[acao];
     return regra === 'auth' || (regra === 'admin' && this.usuario.perfil === 'admin');
   },
 
-  // ---- Login / sessão ----
   async entrar(ev) {
     ev.preventDefault();
     const email = this.$('email').value.trim(), senha = this.$('senha').value;
@@ -35,7 +28,7 @@ const App = {
 
   async iniciarSessao(usuario) {
     this.usuario = usuario;
-    const raiz = await Api.get('/');            // documentação: campos, filtros, permissões, relatórios
+    const raiz = await Api.get('/');
     this.docs = raiz.recursos;
     this.relatorios = raiz.relatorios;
     this.$('login').hidden = true;
@@ -45,8 +38,6 @@ const App = {
     this.montarAbas();
     this.abrirAba(this.abasVisiveis()[0]);
   },
-
-  /** Volta para a tela de login (sair ou sessão expirada). */
   sair(motivo) {
     Api.guardarToken(null);
     sessionStorage.removeItem('usuario');
@@ -59,9 +50,7 @@ const App = {
     if (motivo) Util.aviso(this.$('msgLogin'), 'aviso', motivo);
   },
 
-  // ---- Abas ----
   abasVisiveis() {
-    // 'usuarios' só aparece para quem tem permissão de listar (administrador)
     return ['comandas', 'relatorios', ...this.CRUD.filter(r => this.docs[r] && this.pode(r, 'listar'))];
   },
 
@@ -81,7 +70,6 @@ const App = {
     else Crud.abrir(nome);
   },
 
-  // ---- Inicialização da página ----
   async iniciar() {
     Api.aoExpirar = () => this.sair('Sua sessão expirou. Entre novamente.');
     this.$('formLogin').addEventListener('submit', ev => this.entrar(ev));
@@ -90,12 +78,10 @@ const App = {
       const b = ev.target.closest('button[data-aba]');
       if (b) this.abrirAba(b.dataset.aba);
     });
-    // botões "Cancelar" de todas as janelas
     document.querySelectorAll('dialog [data-fechar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
 
     Crud.iniciar(); Comandas.iniciar(); Relatorios.iniciar();
 
-    // sessão já aberta nesta aba? (token em sessionStorage)
     if (Api.token) {
       try {
         await this.iniciarSessao(JSON.parse(sessionStorage.getItem('usuario')));

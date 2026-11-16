@@ -4,14 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gestão de Comandas · Protótipo A3</title>
-<link rel="stylesheet" href="css/estilo.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<!-- Indicador de carregamento (aparece enquanto há requisição em andamento) -->
 <div id="carregando" hidden>Carregando…</div>
 
 <header>
-  <h1>Gestão de Comandas <small>Protótipo do CRUD da API · A3</small></h1>
+  <h1>Gestão de Comandas<small>Protótipo · A3</small></h1>
   <div class="usuario">
     <span id="quem"></span>
     <button id="sair" hidden>Sair</button>
@@ -19,7 +18,6 @@
 </header>
 
 <main>
-  <!-- ============ Login ============ -->
   <section class="card" id="login">
     <h2>Entrar</h2>
     <form id="formLogin" class="grade" novalidate>
@@ -31,11 +29,9 @@
     <div id="msgLogin"></div>
   </section>
 
-  <!-- ============ Aplicação (após o login) ============ -->
   <section id="app" hidden>
     <nav class="card abas" id="abas" aria-label="Seções"></nav>
 
-    <!-- Telas CRUD genéricas (categorias, produtos, clientes, usuarios, pagamentos) -->
     <section class="card" id="viewCrud" hidden>
       <div class="barra">
         <h2 id="crudTitulo"></h2>
@@ -87,7 +83,7 @@
     </section>
   </section>
 
-  <!-- Painel de requisição/resposta (útil para acompanhar o CRUD na demonstração) -->
+  <!-- Painel de requisição/resposta -->
   <section class="card" id="logCard" hidden>
     <details open>
       <summary>Última requisição enviada à API e resposta</summary>

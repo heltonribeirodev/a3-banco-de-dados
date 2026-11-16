@@ -56,8 +56,8 @@
 **Falar:** uma frase por item. Mencionar a limitação conhecida (sem limite de tentativas de login).
 
 ### Slide 12 — Testes (0:45)
-**Na tela:** tabela "teste × esperado × obtido" das 5 regras + "74 verificações automatizadas, 0 falhas".
-**Falar:** o script cria e remove os próprios dados; rodar no terminal só se houver tempo.
+**Na tela:** tabela "teste × esperado × obtido" das 5 regras + "collection do Postman: 50 testes, 0 falhas".
+**Falar:** a collection cria e remove os próprios dados; mostrar o Runner só se houver tempo.
 
 ### Slide 13 — Aprendizados e trabalhos futuros (0:45)
 **Na tela:** 3 aprendizados + 3 melhorias (estoque, limite de login, upload de imagem).
