@@ -38,7 +38,7 @@ Banco de dados (XAMPP padrão): usuário `root`, **sem senha** (configurado em `
 - API REST com GET/POST/PUT/DELETE nas 7 tabelas, JWT, permissões e 7 relatórios.
 - Protótipo: login, CRUD, comandas (itens, pagamento dividido, fiado, cancelar), relatórios, responsivo.
 - Testes: `C:\xampp\php\php.exe dev\tests\teste_api.php` → 74 verificações, 0 falhas.
-- Rascunhos em `docs/`: `relatorio_tecnico.md`, `apresentacao_roteiro.md` e `perguntas_banca.md`.
+- Rascunhos em `docs/`: `relatorio_tecnico.md`, `slide.md` e `perguntas_banca.md`.
 - Collection do Postman (opcional): `dev/postman/` — testada no Runner: 50 de 50 testes passaram.
 
 ## 4. O que FALTA (checklist)
@@ -49,8 +49,8 @@ Preencham o responsável e a data de cada item. (A API e o protótipo já foram 
 |---|---|---|---|---|
 | 1 | **Gerar os PNGs dos DERs.** Abrir `dev/db/DER_conceitual.mmd` e `DER_logico.mmd` em https://mermaid.live, exportar PNG e substituir os arquivos de `dev/db/` (os atuais estão desatualizados). | | | ☐ |
 | 2 | **Relatório técnico final.** Reescrever `docs/relatorio_tecnico.md` com as palavras do grupo, preencher os trechos **[AJUSTAR]** (nomes, RA, professor, referências ABNT), inserir os DERs e exportar para Word/PDF. | | | ☐ |
-| 3 | **PowerPoint.** Montar a partir de `docs/apresentacao_roteiro.md` (poucos textos por slide). O arquivo apresentado em 01/12 deve ser **o mesmo** enviado em 28/11. | | | ☐ |
-| 4 | **Ensaiar a demonstração** (roteiro no fim de `docs/apresentacao_roteiro.md`) no computador que será usado na apresentação, e uma vez num celular. | | | ☐ |
+| 3 | **PowerPoint.** Montar a partir de `docs/slide.md` (poucos textos por slide). O arquivo apresentado em 01/12 deve ser **o mesmo** enviado em 28/11. | | | ☐ |
+| 4 | **Ensaiar a demonstração** (roteiro no fim de `docs/slide.md`) no computador que será usado na apresentação, e uma vez num celular. | | | ☐ |
 | 5 | **Estudar as perguntas e os 6 exercícios** de `docs/perguntas_banca.md`. A banca pode pedir alteração de código ao vivo. Todos devem saber explicar o projeto. | todos | | ☐ |
 | 6 | **Testar a collection do Postman** no Runner (opcional). Testada em 10/11/2026: 50 de 50 testes passaram. | | | ☑ |
 | 7 | **Fazer o merge** da branch `a3-finalizacao` na `master` (ou entregar o zip dessa branch). | | | ☐ |

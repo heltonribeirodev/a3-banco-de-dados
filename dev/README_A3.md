@@ -1,8 +1,8 @@
 # Gestão de Comandas — Projeto A3 (UC Banco de Dados, 2026/2)
 
 Banco de dados, API REST e protótipo do sistema de gestão de comandas de bar/restaurante.
-Banco ativo: `sistema_gestao_a3`. Tudo o que pertence ao sistema antigo (banco `sistema_gestao`,
-`home.php`, `admin.php` etc.) está **descontinuado** e foi movido para `dev/legado/`.
+Banco ativo: `sistema_gestao_a3`. O sistema antigo (banco `sistema_gestao`, `home.php`, `admin.php` etc.)
+foi descontinuado e removido; ele continua disponível apenas no histórico do Git (commit `174cc3d`).
 
 ## Estrutura do repositório
 
@@ -14,7 +14,6 @@ dev/
   prototipo/         interface oficial (index.html, css/estilo.css, js/*.js)
   postman/           collection do Postman (material extra, opcional)
   tests/             teste_api.php (testes automatizados da API)
-  legado/            sistema antigo, mantido apenas como histórico
   README_A3.md       este arquivo
 docs/                relatório técnico, roteiro da apresentação, perguntas da banca
 ```
@@ -154,4 +153,3 @@ O script cria e remove os próprios dados de teste (veja `dev/tests/teste_api.ph
 
 - O login não limita tentativas (sem proteção contra força bruta) e o token não pode ser revogado antes de expirar.
 - Imagem do produto é apenas um caminho em texto; não há upload.
-- O sistema antigo em `dev/legado/` não é mais mantido e seus caminhos relativos não funcionam mais.
