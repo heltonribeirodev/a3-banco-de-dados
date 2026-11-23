@@ -154,4 +154,4 @@ Prepare-se para fazer cada um **sem consultar o roteiro**. Depois de cada altera
 ---
 
 **Dica final:** na hora, diga em voz alta o que vai mudar e em qual camada (banco → API → interface) antes de digitar.
-Se travar, leia o erro devolvido pela API no painel de requisição/resposta: ele costuma dizer o que está errado.
+Se travar, leia a mensagem de erro que aparece na tela: ela costuma dizer o que está errado.

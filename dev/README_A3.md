@@ -68,8 +68,7 @@ Se alguma regra falhar, a transação é desfeita (`ROLLBACK`). Exemplo: `CALL s
 ## Protótipo
 
 A interface foi feita só com HTML, CSS e JavaScript, sem biblioteca nenhuma. Ela tem login, as telas de CRUD
-(categorias, produtos, clientes, usuários e pagamentos), a tela de comandas e a tela de relatórios. Embaixo da tela
-fica um painel que mostra a requisição enviada à API e a resposta, o que ajuda a acompanhar o que acontece.
+(categorias, produtos, clientes, usuários e pagamentos), a tela de comandas e a tela de relatórios.
 
 - `js/api.js`: faz as chamadas à API e trata os erros.
 - `js/crud.js`: uma tela de CRUD que serve para várias tabelas, montada a partir do `GET /` da API.

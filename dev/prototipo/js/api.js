@@ -60,13 +60,11 @@ const Api = {
       const texto = await resposta.text();
       try { json = texto ? JSON.parse(texto) : null; } catch (e) {}
     } catch (e) {
-      this.registrar(metodo, url, corpo, 0, 'Falha de conexão', null);
       throw new ErroApi(0, 'Não foi possível conectar à API. Verifique se o Apache e o MySQL estão ligados.');
     } finally {
       if (--this.pendentes === 0) document.getElementById('carregando').hidden = true;
     }
 
-    this.registrar(metodo, url, corpo, resposta.status, resposta.statusText, json);
     if (!resposta.ok) {
       if (resposta.status === 401 && caminho !== '/auth/login' && this.aoExpirar) this.aoExpirar();
       throw new ErroApi(resposta.status, (json && json.erro) || 'Erro ' + resposta.status, json && json.detalhes);
@@ -108,20 +106,5 @@ const Api = {
     if (e.message !== 'Dados inválidos.') t += ': ' + e.message;
     if (e.detalhes) t += ' — ' + Object.entries(e.detalhes).map(([k, v]) => k + ': ' + v).join('; ');
     return t;
-  },
-
-  registrar(metodo, url, corpo, status, statusTexto, json) {
-    document.getElementById('logCard').hidden = false;
-    document.getElementById('reqlinha').innerHTML =
-      '<b class="' + Util.esc(metodo) + '">' + Util.esc(metodo) + '</b> ' + Util.esc(url) +
-      ' → <span class="st' + (status >= 400 || status === 0 ? ' ruim' : '') + '">' + status + ' ' + Util.esc(statusTexto) + '</span>';
-    let enviado = '';
-    if (corpo !== undefined) {
-      const copia = { ...corpo };
-      if ('senha' in copia) copia.senha = '********';        // não exibe senhas no painel
-      enviado = '// corpo enviado\n' + JSON.stringify(copia, null, 2) + '\n\n';
-    }
-    document.getElementById('log').textContent =
-      enviado + '// resposta\n' + (json ? JSON.stringify(json, null, 2) : '(sem corpo)');
   },
 };

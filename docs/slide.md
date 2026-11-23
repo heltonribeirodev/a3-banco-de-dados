@@ -72,15 +72,15 @@
 
 **Antes de começar (faça uns 10 minutos antes):**
 1. Apache e MySQL ligados no XAMPP. Reimporte `dev/db/sistema_gestao_a3.sql` para voltar ao estado inicial.
-2. Abra `http://localhost/gestao-comandas-a3/dev/prototipo/` e deixe o painel de requisição/resposta visível.
+2. Abra `http://localhost/gestao-comandas-a3/dev/prototipo/`.
 3. Tenha uma aba com o phpMyAdmin no banco `sistema_gestao_a3` (para mostrar que o dado realmente mudou).
 
 **Passo a passo:**
 
 1. **Login como atendente** (`ana@a3.local` / `Senha@123`). Mostre que **não há a aba "usuarios"** e que em *produtos* não há botões de criar/editar. *Fale:* "a tela esconde, mas quem barra de verdade é a API".
 2. **Abrir uma comanda:** aba *comandas* → *+ Abrir comanda* → cliente → abrir.
-3. **Adicionar itens:** *+ Adicionar item* (ex.: 2 Cervejas Long Neck e 1 Porção de Fritas). Mostre o total sendo calculado. Aponte no painel o `POST /itens_comanda` e a resposta.
-4. **Editar e remover um item** (mostrar `PUT` e `DELETE` no painel).
+3. **Adicionar itens:** *+ Adicionar item* (ex.: 2 Cervejas Long Neck e 1 Porção de Fritas). Mostre o total sendo calculado.
+4. **Editar e remover um item** (o total é recalculado).
 5. **Pagamento dividido:** *+ Registrar pagamento* → Pix de parte do valor → depois o restante em dinheiro. A comanda passa para **fechada** sozinha.
 6. **Regra 422:** em outra comanda, tente pagar um valor maior que o saldo → mensagem "422 — valor excede o saldo". *Fale:* "a regra mora na API".
 7. **Regra 409:** com a comanda fechada, mostre que os botões de item sumiram; abra a comanda #5 (fiado, com pagamento) e clique em *Cancelar comanda* → 409.

@@ -332,7 +332,7 @@ O protótipo (`dev/prototipo/`) é uma página única em HTML, CSS e JavaScript 
 |---|---|
 | `index.html` | estrutura das telas |
 | `css/estilo.css` | aparência e responsividade |
-| `js/api.js` | `fetch`, token, erros, painel de requisição/resposta, escape de HTML |
+| `js/api.js` | `fetch`, token, erros, escape de HTML |
 | `js/crud.js` | motor de CRUD genérico, guiado por `GET /` |
 | `js/comandas.js` | tela de comandas (itens, pagamentos, fiado, cancelamento) |
 | `js/relatorios.js` | tela de relatórios |
