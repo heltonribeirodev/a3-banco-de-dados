@@ -65,48 +65,6 @@ Ele ainda tem três **procedures com transação**, que fazem as operações pri
 
 Se alguma regra falhar, a transação é desfeita (`ROLLBACK`). Exemplo: `CALL sp_registrar_pagamento(10, 2, 'pix', 10.00);`
 
-## API
-
-Para usar a API é preciso fazer login em `POST /auth/login`. Ele devolve um token (JWT), que vai no cabeçalho
-`Authorization: Bearer <token>` das outras chamadas. O token vale 8 horas. A rota `GET /` mostra a documentação
-da API, com os campos, filtros e permissões de cada recurso.
-
-Todos os recursos têm GET, POST, PUT e DELETE:
-
-| Recurso | Quem pode alterar | Observação |
-|---|---|---|
-| `/usuarios` | só admin | a senha é guardada com hash |
-| `/categorias` e `/produtos` | só admin | todos podem consultar |
-| `/clientes` | todos | só o admin exclui |
-| `/comandas` | todos | só o admin exclui; o total é calculado |
-| `/itens_comanda` | todos | só em comanda aberta |
-| `/pagamentos` | todos criam | só o admin altera e exclui |
-
-As listas aceitam paginação (`?pagina=&limite=`), filtros e ordenação (`?ordem=&direcao=`).
-
-Também existem sete relatórios, só para leitura, em `GET /relatorios/{nome}`: `comandas-periodo`
-(com `data_inicio` e `data_fim`), `produtos-mais-vendidos`, `faturamento-categoria`, `pagamentos-metodo`,
-`desempenho-atendentes`, `fiado-saldo-devedor` e `faturamento-mensal`.
-
-### Códigos de resposta
-
-| Código | Quando acontece |
-|---|---|
-| 200, 201, 204 | deu certo (204 é exclusão, sem corpo) |
-| 400 | o JSON enviado está inválido |
-| 401 | sem token, token vencido ou senha errada |
-| 403 | o perfil não pode fazer isso (ex.: atendente numa rota de admin) |
-| 404 | não encontrou o registro |
-| 409 | regra de negócio (comanda fechada, exclusão de algo que tem vínculos) |
-| 422 | dado inválido (campo obrigatório, valor negativo, pagamento maior que o saldo) |
-
-### Regras principais
-
-- Só dá para mexer nos itens de uma comanda **aberta**.
-- O pagamento não pode ser maior que o saldo, e a comanda fecha sozinha quando é paga por inteiro.
-- Comanda com pagamento não pode ser cancelada nem excluída.
-- O atendente da comanda é o usuário que está logado.
-
 ## Protótipo
 
 A interface foi feita só com HTML, CSS e JavaScript, sem biblioteca nenhuma. Ela tem login, as telas de CRUD
