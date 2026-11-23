@@ -74,7 +74,7 @@ integração com meios de pagamento reais.
 
 ### 3.1 Modelo conceitual (DER)
 
-Figura 1 — DER conceitual. **[AJUSTAR: inserir a imagem do DER feito pelo grupo.]**
+Figura 1 — DER conceitual (`dev/db/DER_conceitual.jpg`). **[AJUSTAR: inserir a imagem no relatório.]**
 
 Entidades: **USUARIO**, **CLIENTE**, **CATEGORIA**, **PRODUTO**, **COMANDA**, **ITEM_COMANDA** e **PAGAMENTO**.
 
@@ -94,7 +94,7 @@ A relação **N:N entre COMANDA e PRODUTO** (uma comanda tem vários produtos e 
 
 ### 3.2 Modelo lógico
 
-Figura 2 — DER lógico. **[AJUSTAR: inserir a imagem do DER feito pelo grupo.]**
+Figura 2 — DER lógico (`dev/db/DER_logico.jpg`). **[AJUSTAR: inserir a imagem no relatório.]**
 
 ```
 usuarios      (id PK, nome, email UK, senha_hash, perfil, status_conta, criado_em)
