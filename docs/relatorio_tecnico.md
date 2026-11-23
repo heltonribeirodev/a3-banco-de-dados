@@ -74,8 +74,7 @@ integração com meios de pagamento reais.
 
 ### 3.1 Modelo conceitual (DER)
 
-Figura 1 — `dev/db/DER_conceitual.png` (código-fonte em `DER_conceitual.mmd`). **[AJUSTAR: gerar novamente o PNG a
-partir do `.mmd` atualizado, por exemplo em https://mermaid.live, antes de inserir na versão final.]**
+Figura 1 — DER conceitual. **[AJUSTAR: inserir a imagem do DER feito pelo grupo.]**
 
 Entidades: **USUARIO**, **CLIENTE**, **CATEGORIA**, **PRODUTO**, **COMANDA**, **ITEM_COMANDA** e **PAGAMENTO**.
 
@@ -95,7 +94,7 @@ A relação **N:N entre COMANDA e PRODUTO** (uma comanda tem vários produtos e 
 
 ### 3.2 Modelo lógico
 
-Figura 2 — `dev/db/DER_logico.png` (código-fonte em `DER_logico.mmd`).
+Figura 2 — DER lógico. **[AJUSTAR: inserir a imagem do DER feito pelo grupo.]**
 
 ```
 usuarios      (id PK, nome, email UK, senha_hash, perfil, status_conta, criado_em)

@@ -35,7 +35,7 @@ A senha de todos é `Senha@123`.
 dev/
   api/v1/       a API (index.php, config.php, src/)
   assets/       imagens dos produtos
-  db/           script SQL e os diagramas (DER)
+  db/           script SQL
   prototipo/    a interface (index.html, css/, js/)
 docs/           relatório técnico, roteiro dos slides e perguntas da banca
 ```

@@ -45,7 +45,7 @@ Preencham o responsável e a data de cada item. (A API e o protótipo já foram 
 
 | # | Tarefa | Responsável | Prazo | Feito |
 |---|---|---|---|---|
-| 1 | **Gerar os PNGs dos DERs.** Abrir `dev/db/DER_conceitual.mmd` e `DER_logico.mmd` em https://mermaid.live, exportar PNG e substituir os arquivos de `dev/db/` (os atuais estão desatualizados). | | | ☐ |
+| 1 | **Inserir os DERs.** Os arquivos dos DERs conceitual e lógico (feitos pelo grupo) ficam fora do repositório; conferir se `imagem` (e não `imagen`) e `cancelada` (e não `cancelado`) estão corretos e anexá-los ao relatório e à entrega. | | | ☐ |
 | 2 | **Relatório técnico final.** Reescrever `docs/relatorio_tecnico.md` com as palavras do grupo, preencher os trechos **[AJUSTAR]** (nomes, RA, professor, referências ABNT), inserir os DERs e exportar para Word/PDF. | | | ☐ |
 | 3 | **PowerPoint.** Montar a partir de `docs/slide.md` (poucos textos por slide). O arquivo apresentado em 01/12 deve ser **o mesmo** enviado em 28/11. | | | ☐ |
 | 4 | **Ensaiar a demonstração** (roteiro no fim de `docs/slide.md`) no computador que será usado na apresentação, e uma vez num celular. | | | ☐ |
