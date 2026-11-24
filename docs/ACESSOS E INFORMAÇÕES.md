@@ -16,7 +16,7 @@
 | O quê | Endereço |
 |---|---|
 | Protótipo (interface) | http://localhost/gestao-comandas-a3/dev/prototipo/ |
-| API (documentação em JSON) | http://localhost/gestao-comandas-a3/dev/api/v1/ |
+| API PHP (documentação em JSON) | http://localhost/gestao-comandas-a3/dev/api/v1/ |
 | phpMyAdmin | http://localhost/phpmyadmin |
 
 ## 2. Logins
@@ -35,7 +35,7 @@ Banco de dados (XAMPP padrão): usuário `root`, **sem senha** (configurado em `
 ## 3. O que já está pronto
 
 - Banco `sistema_gestao_a3`: DDL, DML e DQL (12 consultas), view e 3 procedures com transação.
-- API REST com GET/POST/PUT/DELETE nas 7 tabelas, JWT, permissões e 7 relatórios.
+- API REST em PHP com GET/POST/PUT/DELETE nas 7 tabelas, JWT, permissões e 7 relatórios.
 - Protótipo: login, CRUD, comandas (itens, pagamento dividido, fiado, cancelar), relatórios, responsivo.
 - Rascunhos em `docs/`: `relatorio_tecnico.md`, `slide.md` (na pasta `power point/`) e `perguntas_banca.md`.
 

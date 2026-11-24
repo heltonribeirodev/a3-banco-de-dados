@@ -18,7 +18,7 @@ acrescida de itens ao longo do atendimento e encerrada com o pagamento. Quando e
 planilhas, surgem erros de soma, perda de comandas, dificuldade de cobrar valores em aberto ("fiado") e ausência de
 relatórios confiáveis sobre vendas.
 
-Este projeto propõe um banco de dados relacional e uma API REST para um sistema de gestão de comandas fictício, além de um
+Este projeto propõe um banco de dados relacional e uma API REST em PHP para um sistema de gestão de comandas fictício, além de um
 protótipo web que simula o uso da API. O objetivo é aplicar os conceitos da UC de Banco de Dados: modelagem conceitual
 e lógica, normalização, SQL (DDL, DML e DQL), integridade referencial, transações e acesso ao banco por meio de uma aplicação.
 
@@ -276,7 +276,7 @@ O `SELECT ... FOR UPDATE` trava a linha da comanda durante a transação, impedi
 Em `sp_registrar_pagamento`, a inserção do pagamento e o fechamento da comanda são **atômicos**: ou ocorrem os dois, ou nenhum.
 Exemplo de falha: `CALL sp_registrar_pagamento(16, 3, 'pix', 1.00);` → "Não é possível pagar uma comanda fechada ou cancelada", sem alterar nada.
 
-## 7. API REST (opcional no enunciado, implementada)
+## 7. API REST em PHP (opcional no enunciado, implementada)
 
 Código em `dev/api/v1/`. Uma única classe genérica (`Resource`) implementa o ciclo `GET` / `POST` / `PUT` / `DELETE`,
 validação, paginação, filtros e ordenação; cada tabela é uma subclasse que declara apenas seus campos, filtros, permissões e
