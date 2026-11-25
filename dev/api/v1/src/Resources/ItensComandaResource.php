@@ -8,9 +8,9 @@ class ItensComandaResource extends Resource
 {
     protected string $tabela = 'itens_comanda';
     protected array $campos = [
-        'comanda_id'     => ['tipo' => 'fk', 'tabela' => 'comandas', 'obrigatorio' => true, 'somenteCriacao' => true],
-        'produto_id'     => ['tipo' => 'fk', 'tabela' => 'produtos', 'obrigatorio' => true],
-        'quantidade'     => ['tipo' => 'int', 'obrigatorio' => true, 'min' => 1],
+        'comanda_id' => ['tipo' => 'fk', 'tabela' => 'comandas', 'obrigatorio' => true, 'somenteCriacao' => true],
+        'produto_id' => ['tipo' => 'fk', 'tabela' => 'produtos', 'obrigatorio' => true],
+        'quantidade' => ['tipo' => 'int', 'obrigatorio' => true, 'min' => 1],
         'valor_unitario' => ['tipo' => 'decimal', 'min' => 0, 'descricao' => 'Padrão: preço atual do produto'],
     ];
     protected array $filtros = ['comanda_id' => ['t.comanda_id', '='], 'produto_id' => ['t.produto_id', '=']];
@@ -30,7 +30,7 @@ class ItensComandaResource extends Resource
     protected function formatar(array $row): array
     {
         $row = parent::formatar($row);
-        $row['subtotal'] = (float)$row['subtotal'];
+        $row['subtotal'] = (float) $row['subtotal'];
         return $row;
     }
 
@@ -53,8 +53,10 @@ class ItensComandaResource extends Resource
     {
         $this->exigirComandaAberta($dados['comanda_id']);
         $p = $this->produto($dados['produto_id']);
-        if (!(int)$p['ativo']) { throw new ApiException(409, 'Produto inativo não pode ser vendido.'); }
-        $dados['valor_unitario'] ??= (float)$p['valor'];
+        if (!(int) $p['ativo']) {
+            throw new ApiException(409, 'Produto inativo não pode ser vendido.');
+        }
+        $dados['valor_unitario'] ??= (float) $p['valor'];
     }
 
     protected function antesAtualizar(int $id, array $atual, array &$dados): void
@@ -62,8 +64,10 @@ class ItensComandaResource extends Resource
         $this->exigirComandaAberta($atual['comanda_id']);
         if (isset($dados['produto_id']) && $dados['produto_id'] !== $atual['produto_id']) {
             $p = $this->produto($dados['produto_id']);
-            if (!(int)$p['ativo']) { throw new ApiException(409, 'Produto inativo não pode ser vendido.'); }
-            $dados['valor_unitario'] ??= (float)$p['valor'];
+            if (!(int) $p['ativo']) {
+                throw new ApiException(409, 'Produto inativo não pode ser vendido.');
+            }
+            $dados['valor_unitario'] ??= (float) $p['valor'];
         }
     }
 

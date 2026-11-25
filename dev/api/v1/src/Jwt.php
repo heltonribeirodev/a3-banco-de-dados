@@ -16,7 +16,7 @@ class Jwt
 
     public static function gerar(array $dados): string
     {
-        $cfg     = (require __DIR__ . '/../config.php')['jwt'];
+        $cfg = (require __DIR__ . '/../config.php')['jwt'];
         $payload = $dados + ['iat' => time(), 'exp' => time() + $cfg['validade']];
         $h = self::b64(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
         $p = self::b64(json_encode($payload));
@@ -28,12 +28,18 @@ class Jwt
     public static function validar(string $token): ?array
     {
         $partes = explode('.', $token);
-        if (count($partes) !== 3) { return null; }
+        if (count($partes) !== 3) {
+            return null;
+        }
         $cfg = (require __DIR__ . '/../config.php')['jwt'];
         $esperada = self::b64(hash_hmac('sha256', "$partes[0].$partes[1]", $cfg['segredo'], true));
-        if (!hash_equals($esperada, $partes[2])) { return null; }
+        if (!hash_equals($esperada, $partes[2])) {
+            return null;
+        }
         $payload = json_decode(self::b64dec($partes[1]), true);
-        if (!is_array($payload) || ($payload['exp'] ?? 0) < time()) { return null; }
+        if (!is_array($payload) || ($payload['exp'] ?? 0) < time()) {
+            return null;
+        }
         return $payload;
     }
 }

@@ -8,14 +8,16 @@ class PagamentosResource extends Resource
     protected string $tabela = 'pagamentos';
     protected array $campos = [
         'comanda_id' => ['tipo' => 'fk', 'tabela' => 'comandas', 'obrigatorio' => true, 'somenteCriacao' => true],
-        'metodo'     => ['tipo' => 'enum', 'obrigatorio' => true, 'valores' => ['pix', 'dinheiro', 'cartao_credito', 'cartao_debito']],
-        'valor'      => ['tipo' => 'decimal', 'obrigatorio' => true, 'min' => 0.01],
-        'pago_em'    => ['tipo' => 'datetime', 'descricao' => 'Padrão: data e hora atuais'],
+        'metodo' => ['tipo' => 'enum', 'obrigatorio' => true, 'valores' => ['pix', 'dinheiro', 'cartao_credito', 'cartao_debito']],
+        'valor' => ['tipo' => 'decimal', 'obrigatorio' => true, 'min' => 0.01],
+        'pago_em' => ['tipo' => 'datetime', 'descricao' => 'Padrão: data e hora atuais'],
     ];
     protected array $extras = ['usuario_id'];
     protected array $filtros = [
-        'comanda_id' => ['t.comanda_id', '='], 'metodo' => ['t.metodo', '='],
-        'data_inicio' => ['t.pago_em', '>='], 'data_fim' => ['t.pago_em', '<='],
+        'comanda_id' => ['t.comanda_id', '='],
+        'metodo' => ['t.metodo', '='],
+        'data_inicio' => ['t.pago_em', '>='],
+        'data_fim' => ['t.pago_em', '<='],
     ];
     protected array $ordenaveis = ['id', 'comanda_id', 'valor', 'pago_em'];
     protected array $permissoes = ['listar' => 'auth', 'ver' => 'auth', 'criar' => 'auth', 'atualizar' => 'admin', 'excluir' => 'admin'];

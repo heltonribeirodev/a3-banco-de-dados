@@ -12,11 +12,11 @@ class Request
     public function __construct()
     {
         $this->metodo = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
-        $this->query  = $_GET;
+        $this->query = $_GET;
 
         // Caminho relativo à pasta da API (funciona com e sem mod_rewrite)
         $caminho = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-        $base    = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+        $base = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
         if ($base !== '' && str_starts_with($caminho, $base)) {
             $caminho = substr($caminho, strlen($base));
         }
@@ -42,7 +42,9 @@ class Request
         $h = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
         if ($h === '' && function_exists('getallheaders')) {
             foreach (getallheaders() as $k => $v) {
-                if (strcasecmp($k, 'Authorization') === 0) { $h = $v; }
+                if (strcasecmp($k, 'Authorization') === 0) {
+                    $h = $v;
+                }
             }
         }
         return preg_match('/^Bearer\s+(.+)$/i', $h, $m) ? trim($m[1]) : null;
@@ -64,7 +66,9 @@ class Response
     public static function erro(int $status, string $mensagem, array $detalhes = []): never
     {
         $corpo = ['erro' => $mensagem];
-        if ($detalhes) { $corpo['detalhes'] = $detalhes; }
+        if ($detalhes) {
+            $corpo['detalhes'] = $detalhes;
+        }
         self::json($status, $corpo);
     }
 }

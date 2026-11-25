@@ -8,13 +8,13 @@ class Relatorios
 {
     /** Relatórios disponíveis: nome => [descrição, parâmetros aceitos]. */
     private const LISTA = [
-        'comandas-periodo'       => ['Comandas com cliente, atendente, itens, total e pago', ['data_inicio', 'data_fim']],
+        'comandas-periodo' => ['Comandas com cliente, atendente, itens, total e pago', ['data_inicio', 'data_fim']],
         'produtos-mais-vendidos' => ['Ranking de produtos por quantidade vendida', ['data_inicio', 'data_fim', 'limite']],
-        'faturamento-categoria'  => ['Faturamento por categoria de produto', ['data_inicio', 'data_fim']],
-        'pagamentos-metodo'      => ['Recebimentos por forma de pagamento', ['data_inicio', 'data_fim']],
-        'desempenho-atendentes'  => ['Comandas e valores por atendente', []],
-        'fiado-saldo-devedor'    => ['Saldo devedor das comandas em fiado', []],
-        'faturamento-mensal'     => ['Faturamento por mês (parâmetro minimo: filtro HAVING)', ['minimo']],
+        'faturamento-categoria' => ['Faturamento por categoria de produto', ['data_inicio', 'data_fim']],
+        'pagamentos-metodo' => ['Recebimentos por forma de pagamento', ['data_inicio', 'data_fim']],
+        'desempenho-atendentes' => ['Comandas e valores por atendente', []],
+        'fiado-saldo-devedor' => ['Saldo devedor das comandas em fiado', []],
+        'faturamento-mensal' => ['Faturamento por mês (parâmetro minimo: filtro HAVING)', ['minimo']],
     ];
 
     /** Texto exibido em GET /. */
@@ -33,24 +33,26 @@ class Relatorios
             throw new ApiException(404, "Relatório '$nome' não existe. Veja GET / para a lista.");
         }
         [$sql, $params, $numericos] = match ($nome) {
-            'comandas-periodo'       => self::comandasPeriodo($q),
+            'comandas-periodo' => self::comandasPeriodo($q),
             'produtos-mais-vendidos' => self::produtosMaisVendidos($q),
-            'faturamento-categoria'  => self::faturamentoCategoria($q),
-            'pagamentos-metodo'      => self::pagamentosMetodo($q),
-            'desempenho-atendentes'  => self::desempenhoAtendentes(),
-            'fiado-saldo-devedor'    => self::fiadoSaldoDevedor(),
-            'faturamento-mensal'     => self::faturamentoMensal($q),
+            'faturamento-categoria' => self::faturamentoCategoria($q),
+            'pagamentos-metodo' => self::pagamentosMetodo($q),
+            'desempenho-atendentes' => self::desempenhoAtendentes(),
+            'fiado-saldo-devedor' => self::fiadoSaldoDevedor(),
+            'faturamento-mensal' => self::faturamentoMensal($q),
         };
         $st = Database::conexao()->prepare($sql);
         $st->execute($params);
         $linhas = $st->fetchAll();
         foreach ($linhas as &$l) {
             // texto numérico ('5' ou '47.00') vira int ou float
-            foreach ($numericos as $col) { $l[$col] = $l[$col] + 0; }
+            foreach ($numericos as $col) {
+                $l[$col] = $l[$col] + 0;
+            }
         }
         unset($l);
         $filtros = array_intersect_key($q, array_flip(self::LISTA[$nome][1]));
-        return ['dados' => $linhas, 'meta' => ['relatorio' => $nome, 'total' => count($linhas), 'filtros' => (object)$filtros]];
+        return ['dados' => $linhas, 'meta' => ['relatorio' => $nome, 'total' => count($linhas), 'filtros' => (object) $filtros]];
     }
 
     // ------------------------------------------------------------------
@@ -59,7 +61,9 @@ class Relatorios
     private static function data(array $q, string $chave): ?string
     {
         $v = $q[$chave] ?? '';
-        if ($v === '') { return null; }
+        if ($v === '') {
+            return null;
+        }
         $d = is_string($v) ? DateTime::createFromFormat('Y-m-d', $v) : false;
         if (!$d || $d->format('Y-m-d') !== $v) {
             throw new ApiException(422, 'Dados inválidos.', [$chave => 'Data inválida. Use AAAA-MM-DD.']);
@@ -79,9 +83,16 @@ class Relatorios
         if ($ini && $fim && $ini > $fim) {
             throw new ApiException(422, 'Dados inválidos.', ['data_fim' => 'A data final deve ser maior ou igual à inicial.']);
         }
-        $sql = ''; $params = [];
-        if ($ini) { $sql .= " AND $coluna >= ?"; $params[] = $ini; }
-        if ($fim) { $sql .= " AND $coluna < DATE_ADD(?, INTERVAL 1 DAY)"; $params[] = $fim; }
+        $sql = '';
+        $params = [];
+        if ($ini) {
+            $sql .= " AND $coluna >= ?";
+            $params[] = $ini;
+        }
+        if ($fim) {
+            $sql .= " AND $coluna < DATE_ADD(?, INTERVAL 1 DAY)";
+            $params[] = $fim;
+        }
         return [$sql, $params];
     }
 
@@ -103,7 +114,7 @@ class Relatorios
     private static function produtosMaisVendidos(array $q): array
     {
         [$per, $params] = self::periodo($q, 'c.aberta_em');
-        $limite = min(100, max(1, (int)($q['limite'] ?? 10)));
+        $limite = min(100, max(1, (int) ($q['limite'] ?? 10)));
         $sql = "SELECT p.nome AS produto, ct.nome AS categoria,
                        SUM(i.quantidade) AS qtd_vendida,
                        SUM(i.quantidade * i.valor_unitario) AS receita
@@ -172,7 +183,7 @@ class Relatorios
     private static function faturamentoMensal(array $q): array
     {
         $min = $q['minimo'] ?? '0';
-        if (!is_numeric($min) || (float)$min < 0) {
+        if (!is_numeric($min) || (float) $min < 0) {
             throw new ApiException(422, 'Dados inválidos.', ['minimo' => 'Deve ser um número maior ou igual a zero.']);
         }
         $sql = "SELECT DATE_FORMAT(c.aberta_em, '%Y-%m') AS mes,
@@ -184,6 +195,6 @@ class Relatorios
                  GROUP BY DATE_FORMAT(c.aberta_em, '%Y-%m')
                 HAVING SUM(v.total) >= ?
                  ORDER BY mes";
-        return [$sql, [(float)$min], ['qtd_comandas', 'faturamento']];
+        return [$sql, [(float) $min], ['qtd_comandas', 'faturamento']];
     }
 }

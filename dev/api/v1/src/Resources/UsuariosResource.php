@@ -5,11 +5,17 @@ class UsuariosResource extends Resource
     protected string $tabela = 'usuarios';
     protected array $extras = ['criado_em'];
     protected array $campos = [
-        'nome'         => ['tipo' => 'string', 'obrigatorio' => true, 'max' => 100],
-        'email'        => ['tipo' => 'email', 'obrigatorio' => true, 'descricao' => 'Único no sistema'],
-        'senha'        => ['tipo' => 'string', 'obrigatorioCriacao' => true, 'min' => 8, 'max' => 72, 'virtual' => true,
-                           'descricao' => 'Somente escrita; armazenada com hash bcrypt'],
-        'perfil'       => ['tipo' => 'enum', 'valores' => ['admin', 'atendente']],
+        'nome' => ['tipo' => 'string', 'obrigatorio' => true, 'max' => 100],
+        'email' => ['tipo' => 'email', 'obrigatorio' => true, 'descricao' => 'Único no sistema'],
+        'senha' => [
+            'tipo' => 'string',
+            'obrigatorioCriacao' => true,
+            'min' => 8,
+            'max' => 72,
+            'virtual' => true,
+            'descricao' => 'Somente escrita; armazenada com hash bcrypt'
+        ],
+        'perfil' => ['tipo' => 'enum', 'valores' => ['admin', 'atendente']],
         'status_conta' => ['tipo' => 'enum', 'valores' => ['ativo', 'inativo']],
     ];
     protected array $filtros = ['perfil' => ['t.perfil', '='], 'status_conta' => ['t.status_conta', '='], 'q' => ['t.nome', 'LIKE']];
@@ -46,6 +52,6 @@ class UsuariosResource extends Resource
 
     private function totalAdminsAtivos(): int
     {
-        return (int)$this->pdo->query("SELECT COUNT(*) FROM usuarios WHERE perfil='admin' AND status_conta='ativo'")->fetchColumn();
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM usuarios WHERE perfil='admin' AND status_conta='ativo'")->fetchColumn();
     }
 }

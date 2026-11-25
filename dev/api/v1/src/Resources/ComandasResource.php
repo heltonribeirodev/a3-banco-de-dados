@@ -9,13 +9,19 @@ class ComandasResource extends Resource
     protected string $tabela = 'comandas';
     protected array $campos = [
         'cliente_id' => ['tipo' => 'fk', 'tabela' => 'clientes', 'obrigatorio' => true],
-        'status'     => ['tipo' => 'enum', 'valores' => ['aberta', 'fechada', 'fiado', 'cancelada'],
-                         'descricao' => 'Na criação é sempre "aberta"'],
+        'status' => [
+            'tipo' => 'enum',
+            'valores' => ['aberta', 'fechada', 'fiado', 'cancelada'],
+            'descricao' => 'Na criação é sempre "aberta"'
+        ],
     ];
     protected array $extras = ['usuario_id', 'aberta_em', 'fechada_em'];
     protected array $filtros = [
-        'status' => ['t.status', '='], 'cliente_id' => ['t.cliente_id', '='], 'usuario_id' => ['t.usuario_id', '='],
-        'data_inicio' => ['t.aberta_em', '>='], 'data_fim' => ['t.aberta_em', '<='],
+        'status' => ['t.status', '='],
+        'cliente_id' => ['t.cliente_id', '='],
+        'usuario_id' => ['t.usuario_id', '='],
+        'data_inicio' => ['t.aberta_em', '>='],
+        'data_fim' => ['t.aberta_em', '<='],
     ];
     protected array $ordenaveis = ['id', 'status', 'aberta_em', 'fechada_em', 'cliente_id'];
     protected array $permissoes = ['listar' => 'auth', 'ver' => 'auth', 'criar' => 'auth', 'atualizar' => 'auth', 'excluir' => 'admin'];
@@ -33,7 +39,9 @@ class ComandasResource extends Resource
     protected function formatar(array $row): array
     {
         $row = parent::formatar($row);
-        foreach (['total', 'pago', 'saldo'] as $k) { $row[$k] = (float)$row[$k]; }
+        foreach (['total', 'pago', 'saldo'] as $k) {
+            $row[$k] = (float) $row[$k];
+        }
         return $row;
     }
 
@@ -47,15 +55,21 @@ class ComandasResource extends Resource
         );
         $st->execute([$c['id']]);
         $c['itens'] = array_map(fn($i) => [
-            'id' => (int)$i['id'], 'produto_id' => (int)$i['produto_id'], 'produto_nome' => $i['produto_nome'],
-            'quantidade' => (int)$i['quantidade'], 'valor_unitario' => (float)$i['valor_unitario'],
-            'subtotal' => (float)$i['subtotal'],
+            'id' => (int) $i['id'],
+            'produto_id' => (int) $i['produto_id'],
+            'produto_nome' => $i['produto_nome'],
+            'quantidade' => (int) $i['quantidade'],
+            'valor_unitario' => (float) $i['valor_unitario'],
+            'subtotal' => (float) $i['subtotal'],
         ], $st->fetchAll());
 
         $st = $this->pdo->prepare('SELECT id, metodo, valor, pago_em FROM pagamentos WHERE comanda_id = ? ORDER BY id');
         $st->execute([$c['id']]);
         $c['pagamentos'] = array_map(fn($p) => [
-            'id' => (int)$p['id'], 'metodo' => $p['metodo'], 'valor' => (float)$p['valor'], 'pago_em' => $p['pago_em'],
+            'id' => (int) $p['id'],
+            'metodo' => $p['metodo'],
+            'valor' => (float) $p['valor'],
+            'pago_em' => $p['pago_em'],
         ], $st->fetchAll());
         return $c;
     }
@@ -65,7 +79,7 @@ class ComandasResource extends Resource
         if (($dados['status'] ?? 'aberta') !== 'aberta') {
             throw new ApiException(422, 'Dados inválidos.', ['status' => 'Uma comanda nova deve ser criada como "aberta".']);
         }
-        $dados['status']     = 'aberta';
+        $dados['status'] = 'aberta';
         $dados['usuario_id'] = $this->usuario['id'];
     }
 
@@ -75,7 +89,9 @@ class ComandasResource extends Resource
             throw new ApiException(409, "Comanda {$atual['status']} não pode ser alterada.");
         }
         $novo = $dados['status'] ?? $atual['status'];
-        if ($novo === $atual['status']) { return; }
+        if ($novo === $atual['status']) {
+            return;
+        }
 
         if ($novo === 'fechada') {
             if ($atual['total'] <= 0 || $atual['saldo'] > 0) {
@@ -98,15 +114,21 @@ class ComandasResource extends Resource
         $st = Database::conexao()->prepare('SELECT comanda_id, status, total, pago FROM vw_resumo_comandas WHERE comanda_id = ?');
         $st->execute([$id]);
         $r = $st->fetch();
-        if (!$r) { throw new ApiException(404, "Comanda com id $id não encontrada."); }
-        return ['status' => $r['status'], 'total' => (float)$r['total'], 'pago' => (float)$r['pago'],
-                'saldo' => round((float)$r['total'] - (float)$r['pago'], 2)];
+        if (!$r) {
+            throw new ApiException(404, "Comanda com id $id não encontrada.");
+        }
+        return [
+            'status' => $r['status'],
+            'total' => (float) $r['total'],
+            'pago' => (float) $r['pago'],
+            'saldo' => round((float) $r['total'] - (float) $r['pago'], 2)
+        ];
     }
 
     /** Fecha a comanda quando totalmente paga; reabre se um pagamento foi removido/reduzido. */
     public static function sincronizarStatus(int $id, ?string $quando = null): void
     {
-        $r   = self::resumo($id);
+        $r = self::resumo($id);
         $pdo = Database::conexao();
         if (in_array($r['status'], ['aberta', 'fiado'], true) && $r['total'] > 0 && $r['saldo'] <= 0) {
             $pdo->prepare("UPDATE comandas SET status = 'fechada', fechada_em = ? WHERE id = ?")

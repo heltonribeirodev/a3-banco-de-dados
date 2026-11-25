@@ -1,34 +1,8 @@
--- =====================================================================
--- Projeto A3 - UC Banco de Dados (2026/2)
--- Sistema de Gestão de Comandas (bar/restaurante)
--- Banco: sistema_gestao_a3  (MySQL 8+ / MariaDB 10.4+)
---
--- Este script contém, em ordem:
---   1) DDL - criação do banco, tabelas, chaves e restrições
---   2) DML - carga inicial fictícia, com UPDATE e DELETE de exemplo
---   3) DQL - consultas estratégicas com JOIN
--- Pode ser executado inteiro, mais de uma vez (recria apenas este banco).
--- =====================================================================
-
 SET NAMES utf8mb4;
 
-CREATE DATABASE IF NOT EXISTS sistema_gestao_a3
+CREATE DATABASE sistema_gestao_a3
   CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE sistema_gestao_a3;
-
--- =====================================================================
--- 1) DDL
--- =====================================================================
-SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS pagamentos;
-DROP TABLE IF EXISTS itens_comanda;
-DROP TABLE IF EXISTS comandas;
-DROP TABLE IF EXISTS clientes;
-DROP TABLE IF EXISTS produtos;
-DROP TABLE IF EXISTS categorias;
-DROP TABLE IF EXISTS usuarios;
-DROP VIEW  IF EXISTS vw_resumo_comandas;
-SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE usuarios (
   id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -101,7 +75,6 @@ CREATE TABLE pagamentos (
   CONSTRAINT ck_pagamentos_valor CHECK (valor > 0)
 ) ENGINE=InnoDB;
 
--- Chaves estrangeiras (ALTER TABLE)
 ALTER TABLE produtos
   ADD CONSTRAINT fk_produtos_categoria
   FOREIGN KEY (categoria_id) REFERENCES categorias (id)
@@ -115,8 +88,6 @@ ALTER TABLE comandas
   FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
   ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- Os itens pertencem à comanda (exclui junto); o produto vendido nunca é
--- apagado enquanto houver histórico de venda (RESTRICT).
 ALTER TABLE itens_comanda
   ADD CONSTRAINT fk_itens_comanda
   FOREIGN KEY (comanda_id) REFERENCES comandas (id)
@@ -133,15 +104,10 @@ ALTER TABLE pagamentos
   FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
   ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- Índices de apoio às consultas e filtros mais frequentes
--- Observação: o InnoDB já cria automaticamente um índice para cada chave
--- estrangeira (ex.: pagamentos.comanda_id, itens_comanda.comanda_id). Por isso
--- NÃO se cria um índice extra nessas colunas: seria redundante.
-ALTER TABLE comandas   ADD INDEX idx_comandas_status_data (status, aberta_em); -- filtros por status e período
-ALTER TABLE produtos   ADD INDEX idx_produtos_nome (nome);                      -- busca por nome
-ALTER TABLE pagamentos ADD INDEX idx_pagamentos_pago_em (pago_em);              -- relatórios por período
+ALTER TABLE comandas   ADD INDEX idx_comandas_status_data (status, aberta_em);
+ALTER TABLE produtos   ADD INDEX idx_produtos_nome (nome);
+ALTER TABLE pagamentos ADD INDEX idx_pagamentos_pago_em (pago_em);
 
--- Visão com o total de cada comanda (soma dos itens) e o valor já pago
 CREATE VIEW vw_resumo_comandas AS
 SELECT c.id AS comanda_id,
        c.status,
@@ -152,27 +118,13 @@ SELECT c.id AS comanda_id,
                    FROM pagamentos p WHERE p.comanda_id = c.id), 0)    AS pago
   FROM comandas c;
 
--- ---------------------------------------------------------------------
--- 1.1) PROCEDURES COM TRANSAÇÃO
--- Cada procedure executa uma operação completa do negócio dentro de uma
--- transação: ou tudo é gravado (COMMIT) ou nada é (ROLLBACK). As regras de
--- negócio são verificadas com SIGNAL, que interrompe a operação com uma
--- mensagem de erro. O SELECT ... FOR UPDATE trava a comanda enquanto a
--- transação está aberta, evitando que dois pagamentos simultâneos passem do saldo.
--- ---------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS sp_adicionar_item;
-DROP PROCEDURE IF EXISTS sp_registrar_pagamento;
-DROP PROCEDURE IF EXISTS sp_cancelar_comanda;
-
 DELIMITER $$
 
--- Lança um item em uma comanda aberta, usando o preço atual do produto.
 CREATE PROCEDURE sp_adicionar_item(IN p_comanda INT UNSIGNED, IN p_produto INT UNSIGNED, IN p_qtd INT UNSIGNED)
 BEGIN
   DECLARE v_status VARCHAR(20) DEFAULT NULL;
   DECLARE v_valor  DECIMAL(10,2);
   DECLARE v_ativo  TINYINT DEFAULT NULL;
-  -- qualquer erro desfaz a transação e é repassado a quem chamou
   DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
 
   START TRANSACTION;
@@ -195,8 +147,6 @@ BEGIN
   COMMIT;
 END$$
 
--- Registra um pagamento (a comanda pode ter vários: pagamento dividido).
--- Se o pagamento cobre todo o saldo, a comanda é fechada na mesma transação.
 CREATE PROCEDURE sp_registrar_pagamento(IN p_comanda INT UNSIGNED, IN p_usuario INT UNSIGNED,
                                         IN p_metodo VARCHAR(20), IN p_valor DECIMAL(10,2))
 BEGIN
@@ -229,7 +179,6 @@ BEGIN
   SELECT status, total, pago FROM vw_resumo_comandas WHERE comanda_id = p_comanda;
 END$$
 
--- Cancela uma comanda que ainda não recebeu nenhum pagamento.
 CREATE PROCEDURE sp_cancelar_comanda(IN p_comanda INT UNSIGNED)
 BEGIN
   DECLARE v_status VARCHAR(20) DEFAULT NULL;
@@ -254,10 +203,6 @@ END$$
 
 DELIMITER ;
 
--- =====================================================================
--- 2) DML - carga inicial com dados fictícios para homologação
--- =====================================================================
--- Categorias
 INSERT INTO categorias (id, nome) VALUES
   (1, 'Cervejas'),
   (2, 'Refrigerantes'),
@@ -267,7 +212,6 @@ INSERT INTO categorias (id, nome) VALUES
   (6, 'Jogos'),
   (7, 'Destilados e Drinks');
 
--- Produtos
 INSERT INTO produtos (id, categoria_id, nome, valor, imagem) VALUES
   (1, 1, 'Cerveja Lata 350ml', 6.00, 'assets/default.png'),
   (2, 1, 'Cerveja Long Neck', 8.50, 'assets/uploads/long-neck-sol-1780914669.webp'),
@@ -289,7 +233,6 @@ INSERT INTO produtos (id, categoria_id, nome, valor, imagem) VALUES
   (18, 7, 'Smirnoff 1L', 55.00, 'assets/uploads/smirnoff-1l-1780915114.jpg'),
   (19, 7, 'Ice Big Apple', 12.00, 'assets/uploads/ice-kislla-big-apple-1780915250.jpg');
 
--- Clientes
 INSERT INTO clientes (id, nome, telefone) VALUES
   (1, 'Carlos Almeida', '(41) 99000-0001'),
   (2, 'Fernanda Souza', '(41) 99000-0002'),
@@ -300,14 +243,12 @@ INSERT INTO clientes (id, nome, telefone) VALUES
   (7, 'Bruno Carvalho', '(41) 99000-0007'),
   (8, 'Juliana Martins', '(41) 99000-0008');
 
--- Usuários (senha de todos: Senha@123, armazenada com hash bcrypt)
 INSERT INTO usuarios (id, nome, email, senha_hash, perfil, status_conta) VALUES
   (1, 'Administrador', 'admin@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'admin', 'ativo'),
   (2, 'Ana Atendente', 'ana@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'ativo'),
   (3, 'Pedro Atendente', 'pedro@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'ativo'),
   (4, 'Lucas Desligado', 'lucas@a3.local', '$2y$10$xac2TOJEFL5AOVStYhUOJelIbKH.3PYnKQW7IztkP/RyOWT6L6j1i', 'atendente', 'inativo');
 
--- Comandas
 INSERT INTO comandas (id, cliente_id, usuario_id, status, aberta_em, fechada_em) VALUES
   (1, 1, 2, 'fechada', '2026-10-05 19:10:00', '2026-10-05 20:45:00'),
   (2, 2, 2, 'fechada', '2026-10-05 20:30:00', '2026-10-05 21:50:00'),
@@ -325,7 +266,6 @@ INSERT INTO comandas (id, cliente_id, usuario_id, status, aberta_em, fechada_em)
   (14, 6, 3, 'fechada', '2026-09-27 21:30:00', '2026-09-27 22:40:00'),
   (15, 7, 2, 'fechada', '2026-11-02 18:20:00', '2026-11-02 19:30:00');
 
--- Itens das comandas (valor_unitario guarda o preço praticado na venda)
 INSERT INTO itens_comanda (id, comanda_id, produto_id, quantidade, valor_unitario) VALUES
   (1, 1, 1, 4, 5.50),
   (2, 1, 8, 1, 25.00),
@@ -358,7 +298,6 @@ INSERT INTO itens_comanda (id, comanda_id, produto_id, quantidade, valor_unitari
   (29, 15, 18, 1, 55.00),
   (30, 15, 19, 2, 12.00);
 
--- Pagamentos (a comanda 5 está em fiado, com pagamento parcial)
 INSERT INTO pagamentos (id, comanda_id, usuario_id, metodo, valor, pago_em) VALUES
   (1, 1, 2, 'pix', 47.00, '2026-10-05 20:45:00'),
   (2, 2, 2, 'dinheiro', 39.50, '2026-10-05 21:50:00'),
@@ -374,35 +313,18 @@ INSERT INTO pagamentos (id, comanda_id, usuario_id, metodo, valor, pago_em) VALU
   (12, 14, 3, 'cartao_credito', 37.00, '2026-09-27 22:40:00'),
   (13, 15, 2, 'pix', 79.00, '2026-11-02 19:30:00');
 
--- Uso das procedures (transações): uma comanda nova é atendida por inteiro por elas.
--- Comanda 16 aberta por Pedro (usuário 3) para Juliana (cliente 8).
 INSERT INTO comandas (id, cliente_id, usuario_id, status, aberta_em) VALUES (16, 8, 3, 'aberta', '2026-11-05 20:00:00');
-CALL sp_adicionar_item(16, 2, 2);                       -- 2 Long Neck  = 17,00
-CALL sp_adicionar_item(16, 8, 1);                       -- 1 Fritas     = 25,00 (total 42,00)
-CALL sp_registrar_pagamento(16, 3, 'pix', 20.00);       -- pagamento parcial: comanda continua aberta
-CALL sp_registrar_pagamento(16, 3, 'dinheiro', 22.00);  -- quita o saldo: a comanda é fechada
--- Exemplos que devem FALHAR (descomente um por vez; a transação sofre ROLLBACK):
--- CALL sp_registrar_pagamento(16, 3, 'pix', 1.00);     -- erro: comanda fechada
--- CALL sp_adicionar_item(16, 2, 1);                    -- erro: só em comanda aberta
--- CALL sp_cancelar_comanda(5);                         -- erro: comanda com pagamentos
+CALL sp_adicionar_item(16, 2, 2);
+CALL sp_adicionar_item(16, 8, 1);
+CALL sp_registrar_pagamento(16, 3, 'pix', 20.00);
+CALL sp_registrar_pagamento(16, 3, 'dinheiro', 22.00);
 
--- Ajustes de exemplo executados após a carga (UPDATE e DELETE)
--- Reajuste do preço da cerveja lata: as comandas antigas mantêm o valor
--- original em itens_comanda.valor_unitario.
 UPDATE produtos SET valor = 6.00 WHERE id = 1;
--- Inativa um produto (em vez de excluir, preservando o histórico)
 UPDATE produtos SET ativo = 0 WHERE id = 14;
--- Correção de cadastro
 UPDATE clientes SET telefone = '(41) 99000-0004' WHERE id = 4;
--- Exclusão: cadastro duplicado de cliente criado por engano
 INSERT INTO clientes (id, nome) VALUES (9, 'Cliente Duplicado');
 DELETE FROM clientes WHERE id = 9;
 
--- =====================================================================
--- 3) DQL - consultas estratégicas
--- =====================================================================
-
--- Q1. Relatório de comandas: cliente, atendente e total (JOIN de 4 tabelas)
 SELECT c.id AS comanda, cl.nome AS cliente, u.nome AS atendente, c.status,
        c.aberta_em, SUM(i.quantidade * i.valor_unitario) AS total
   FROM comandas c
@@ -412,7 +334,6 @@ SELECT c.id AS comanda, cl.nome AS cliente, u.nome AS atendente, c.status,
  GROUP BY c.id, cl.nome, u.nome, c.status, c.aberta_em
  ORDER BY c.aberta_em;
 
--- Q2. Comandas de um período (1ª quinzena de outubro/2026: dias 01 a 15) com a quantidade de itens
 SELECT c.id AS comanda, cl.nome AS cliente, c.aberta_em,
        SUM(i.quantidade) AS qtd_itens
   FROM comandas c
@@ -422,7 +343,6 @@ SELECT c.id AS comanda, cl.nome AS cliente, c.aberta_em,
  GROUP BY c.id, cl.nome, c.aberta_em
  ORDER BY c.aberta_em;
 
--- Q3. Produtos mais vendidos (somente comandas fechadas ou em fiado)
 SELECT p.nome AS produto, ct.nome AS categoria,
        SUM(i.quantidade) AS qtd_vendida,
        SUM(i.quantidade * i.valor_unitario) AS receita
@@ -435,7 +355,6 @@ SELECT p.nome AS produto, ct.nome AS categoria,
  ORDER BY qtd_vendida DESC
  LIMIT 5;
 
--- Q4. Faturamento por categoria
 SELECT ct.nome AS categoria,
        SUM(i.quantidade * i.valor_unitario) AS faturamento
   FROM categorias ct
@@ -446,13 +365,11 @@ SELECT ct.nome AS categoria,
  GROUP BY ct.id, ct.nome
  ORDER BY faturamento DESC;
 
--- Q5. Recebimentos por forma de pagamento
 SELECT p.metodo, COUNT(*) AS qtd_pagamentos, SUM(p.valor) AS total_recebido
   FROM pagamentos p
  GROUP BY p.metodo
  ORDER BY total_recebido DESC;
 
--- Q6. Desempenho dos atendentes (inclui quem não abriu nenhuma comanda)
 SELECT u.nome AS atendente, u.status_conta,
        COUNT(DISTINCT c.id) AS comandas_abertas,
        COALESCE(SUM(v.total), 0) AS valor_total
@@ -463,7 +380,6 @@ SELECT u.nome AS atendente, u.status_conta,
  GROUP BY u.id, u.nome, u.status_conta
  ORDER BY valor_total DESC;
 
--- Q7. Saldo devedor das comandas em fiado (total - pago), por cliente
 SELECT cl.nome AS cliente, cl.telefone, v.comanda_id,
        v.total, v.pago, (v.total - v.pago) AS saldo_devedor
   FROM vw_resumo_comandas v
@@ -471,13 +387,11 @@ SELECT cl.nome AS cliente, cl.telefone, v.comanda_id,
   JOIN clientes cl  ON cl.id = c.cliente_id
  WHERE c.status = 'fiado' AND v.total > v.pago;
 
--- Q8. Produtos que nunca foram vendidos (LEFT JOIN + IS NULL)
 SELECT p.id, p.nome, p.valor, p.ativo
   FROM produtos p
   LEFT JOIN itens_comanda i ON i.produto_id = p.id
  WHERE i.id IS NULL;
 
--- Q9. Clientes que gastaram acima da média das comandas (subconsulta)
 SELECT cl.nome AS cliente, SUM(v.total) AS total_gasto
   FROM clientes cl
   JOIN comandas c ON c.cliente_id = cl.id
@@ -487,10 +401,6 @@ SELECT cl.nome AS cliente, SUM(v.total) AS total_gasto
 HAVING SUM(v.total) > (SELECT AVG(total) FROM vw_resumo_comandas WHERE status <> 'cancelada')
  ORDER BY total_gasto DESC;
 
--- Q10. Faturamento por mês (GROUP BY + HAVING)
--- Agrupa as comandas não canceladas pelo mês de abertura (DATE_FORMAT) e soma
--- os totais da view. O HAVING filtra DEPOIS do agrupamento (o WHERE filtra antes),
--- mantendo apenas os meses com faturamento acima de R$ 100,00.
 SELECT DATE_FORMAT(c.aberta_em, '%Y-%m') AS mes,
        COUNT(*)                          AS qtd_comandas,
        SUM(v.total)                      AS faturamento
@@ -501,10 +411,6 @@ SELECT DATE_FORMAT(c.aberta_em, '%Y-%m') AS mes,
 HAVING SUM(v.total) > 100
  ORDER BY mes;
 
--- Q11. Ranking de clientes por valor gasto (subconsulta)
--- A subconsulta na cláusula FROM (tabela derivada "t") calcula o gasto de cada
--- cliente; a consulta externa numera o ranking com RANK() e calcula a
--- participação de cada um com uma subconsulta escalar (total geral).
 SELECT RANK() OVER (ORDER BY t.total_gasto DESC) AS posicao,
        t.cliente, t.qtd_comandas, t.total_gasto,
        ROUND(100 * t.total_gasto /
@@ -517,9 +423,6 @@ SELECT RANK() OVER (ORDER BY t.total_gasto DESC) AS posicao,
          GROUP BY cl.id, cl.nome) t
  ORDER BY posicao, t.cliente;
 
--- Q12. Consulta que usa a VIEW: situação financeira por status de comanda
--- A view já traz total e pago de cada comanda; aqui só agrupamos por status,
--- sem repetir a lógica de soma dos itens e dos pagamentos.
 SELECT v.status,
        COUNT(*)                  AS qtd_comandas,
        SUM(v.total)              AS total,

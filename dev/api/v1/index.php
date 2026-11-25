@@ -1,28 +1,18 @@
 <?php
-/**
- * API REST do Sistema de Gestão de Comandas (Projeto A3 - Banco de Dados).
- *
- * Ponto de entrada único (front controller). Rotas:
- *   POST /auth/login            -> autenticação (retorna token JWT)
- *   GET  /auth/me               -> usuário autenticado
- *   GET  /                      -> documentação dos recursos e relatórios
- *   GET  /relatorios/{nome}     -> relatórios (somente leitura, exige token)
- *   GET|POST     /{recurso}     -> listar | criar
- *   GET|PUT|DELETE /{recurso}/{id} -> consultar | atualizar | excluir
- */
 declare(strict_types=1);
 
 spl_autoload_register(function (string $classe): void {
     foreach (['src/', 'src/Resources/'] as $pasta) {
         $arquivo = __DIR__ . "/$pasta$classe.php";
-        if (is_file($arquivo)) { require_once $arquivo; return; }
+        if (is_file($arquivo)) {
+            require_once $arquivo;
+            return;
+        }
     }
 });
-require_once __DIR__ . '/src/Http.php';       // Request e Response
+require_once __DIR__ . '/src/Http.php';
 require_once __DIR__ . '/src/ApiException.php';
 
-// CORS: só as origens configuradas em config.php (padrão: localhost) podem usar a API
-// a partir de outra página no navegador. O protótipo fica no mesmo servidor.
 $origem = $_SERVER['HTTP_ORIGIN'] ?? '';
 if ($origem !== '' && in_array($origem, (require __DIR__ . '/config.php')['cors'], true)) {
     header("Access-Control-Allow-Origin: $origem");
@@ -30,7 +20,9 @@ if ($origem !== '' && in_array($origem, (require __DIR__ . '/config.php')['cors'
     header('Access-Control-Allow-Headers: Authorization, Content-Type');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 }
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { Response::json(204); }
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    Response::json(204);
+}
 
 $recursos = [];
 foreach (['Usuarios', 'Categorias', 'Produtos', 'Clientes', 'Comandas', 'ItensComanda', 'Pagamentos'] as $n) {
@@ -42,40 +34,57 @@ try {
     $req = new Request();
     $seg = $req->segmentos;
 
-    // ---- Documentação (pública) ----
     if (!$seg) {
-        if ($req->metodo !== 'GET') { throw new ApiException(405, 'Método não permitido.'); }
+        if ($req->metodo !== 'GET') {
+            throw new ApiException(405, 'Método não permitido.');
+        }
         $doc = [];
-        foreach ($recursos as $nome => $classe) { $doc[$nome] = (new $classe())->descricao(); }
-        Response::json(200, ['api' => 'Gestão de Comandas - A3', 'versao' => '1.1', 'autenticacao' => 'Bearer (JWT)',
-            'recursos' => $doc, 'relatorios' => Relatorios::descricao()]);
+        foreach ($recursos as $nome => $classe) {
+            $doc[$nome] = (new $classe())->descricao();
+        }
+        Response::json(200, [
+            'api' => 'Gestão de Comandas - A3',
+            'versao' => '1.1',
+            'autenticacao' => 'Bearer (JWT)',
+            'recursos' => $doc,
+            'relatorios' => Relatorios::descricao()
+        ]);
     }
 
-    // ---- Autenticação ----
     if ($seg[0] === 'auth') {
-        if (($seg[1] ?? '') === 'login' && $req->metodo === 'POST') { Response::json(200, Auth::login($req->corpo)); }
-        if (($seg[1] ?? '') === 'me' && $req->metodo === 'GET')     { Response::json(200, ['dados' => Auth::usuario($req)]); }
+        if (($seg[1] ?? '') === 'login' && $req->metodo === 'POST') {
+            Response::json(200, Auth::login($req->corpo));
+        }
+        if (($seg[1] ?? '') === 'me' && $req->metodo === 'GET') {
+            Response::json(200, ['dados' => Auth::usuario($req)]);
+        }
         throw new ApiException(404, 'Rota de autenticação não encontrada.');
     }
 
-    // ---- Relatórios (somente leitura; exigem token) ----
     if ($seg[0] === 'relatorios') {
         $usuario = Auth::usuario($req);
-        if ($req->metodo !== 'GET') { throw new ApiException(405, 'Relatórios aceitam somente GET.'); }
-        if (!isset($seg[1]) || isset($seg[2])) { throw new ApiException(404, 'Informe o relatório: GET /relatorios/{nome}.'); }
+        if ($req->metodo !== 'GET') {
+            throw new ApiException(405, 'Relatórios aceitam somente GET.');
+        }
+        if (!isset($seg[1]) || isset($seg[2])) {
+            throw new ApiException(404, 'Informe o relatório: GET /relatorios/{nome}.');
+        }
         Response::json(200, Relatorios::executar($seg[1], $req->query));
     }
 
-    // ---- Recursos (todos exigem token) ----
-    if (!isset($recursos[$seg[0]])) { throw new ApiException(404, "Recurso '{$seg[0]}' não existe."); }
-    $usuario  = Auth::usuario($req);
-    $recurso  = new $recursos[$seg[0]]();
+    if (!isset($recursos[$seg[0]])) {
+        throw new ApiException(404, "Recurso '{$seg[0]}' não existe.");
+    }
+    $usuario = Auth::usuario($req);
+    $recurso = new $recursos[$seg[0]]();
     $recurso->setUsuario($usuario);
 
     $id = null;
     if (isset($seg[1])) {
-        if (!ctype_digit($seg[1]) || isset($seg[2])) { throw new ApiException(404, 'Rota não encontrada.'); }
-        $id = (int)$seg[1];
+        if (!ctype_digit($seg[1]) || isset($seg[2])) {
+            throw new ApiException(404, 'Rota não encontrada.');
+        }
+        $id = (int) $seg[1];
     }
 
     switch ([$req->metodo, $id === null]) {
@@ -102,16 +111,17 @@ try {
 } catch (ApiException $e) {
     Response::erro($e->status, $e->getMessage(), $e->detalhes);
 } catch (PDOException $e) {
-    // Traduz os erros de integridade do MySQL/MariaDB para respostas HTTP claras
     $codigo = $e->errorInfo[1] ?? 0;
     $msg = match (true) {
-        $codigo === 1062                       => [409, 'Registro duplicado: já existe um registro com este valor único.'],
-        $codigo === 1451                       => [409, 'O registro possui vínculos (itens, produtos, pagamentos etc.) e não pode ser excluído.'],
-        $codigo === 1452                       => [422, 'Referência inválida: o registro relacionado não existe.'],
-        in_array($codigo, [3819, 4025], true)  => [422, 'Valor viola uma restrição do banco de dados (CHECK).'],
-        default                                => null,
+        $codigo === 1062 => [409, 'Registro duplicado: já existe um registro com este valor único.'],
+        $codigo === 1451 => [409, 'O registro possui vínculos (itens, produtos, pagamentos etc.) e não pode ser excluído.'],
+        $codigo === 1452 => [422, 'Referência inválida: o registro relacionado não existe.'],
+        in_array($codigo, [3819, 4025], true) => [422, 'Valor viola uma restrição do banco de dados (CHECK).'],
+        default => null,
     };
-    if ($msg) { Response::erro($msg[0], $msg[1]); }
+    if ($msg) {
+        Response::erro($msg[0], $msg[1]);
+    }
     error_log('[API A3] ' . $e->getMessage());
     Response::erro(500, 'Erro interno ao acessar o banco de dados.');
 } catch (Throwable $e) {

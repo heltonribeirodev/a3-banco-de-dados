@@ -1,142 +1,165 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestão de Comandas · Protótipo A3</title>
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestão de Comandas · Protótipo A3</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-<div id="carregando" hidden>Carregando…</div>
+  <div id="carregando" hidden>Carregando…</div>
 
-<header>
-  <h1>Gestão de Comandas<small>Protótipo · A3</small></h1>
-  <div class="usuario">
-    <span id="quem"></span>
-    <button id="sair" hidden>Sair</button>
-  </div>
-</header>
+  <header>
+    <h1>Gestão de Comandas<small>Protótipo · A3</small></h1>
+    <div class="usuario">
+      <span id="quem"></span>
+      <button id="sair" hidden>Sair</button>
+    </div>
+  </header>
 
-<main>
-  <section class="card" id="login">
-    <h2>Entrar</h2>
-    <form id="formLogin" class="grade" novalidate>
-      <div><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" value="admin@a3.local"></div>
-      <div><label for="senha">Senha</label><input id="senha" type="password" autocomplete="current-password"></div>
-      <div class="alinha-fim"><button class="pri" type="submit">Entrar</button></div>
-    </form>
-    <p class="suave">Usuários de teste: <code>admin@a3.local</code> (administrador) e <code>ana@a3.local</code> (atendente). Senha: <code>Senha@123</code>.</p>
-    <div id="msgLogin"></div>
-  </section>
-
-  <section id="app" hidden>
-    <nav class="card abas" id="abas" aria-label="Seções"></nav>
-
-    <section class="card" id="viewCrud" hidden>
-      <div class="barra">
-        <h2 id="crudTitulo"></h2>
-        <button class="pri" id="crudNovo">+ Novo registro</button>
-      </div>
-      <form id="crudFiltros" class="filtros"></form>
-      <div id="crudMsg"></div>
-      <div class="tab" id="crudLista"></div>
-      <div class="rodape">
-        <button id="crudAnt">‹ Anterior</button><span id="crudPag"></span><button id="crudProx">Próxima ›</button>
-      </div>
-    </section>
-
-    <!-- Tela de comandas -->
-    <section class="card" id="viewComandas" hidden>
-      <div id="comandasLista">
-        <div class="barra">
-          <h2>Comandas</h2>
-          <button class="pri" id="cmdNova">+ Abrir comanda</button>
-        </div>
-        <form id="cmdFiltros" class="filtros">
-          <div><label for="fStatus">Status</label>
-            <select id="fStatus"><option value="">Todos</option><option>aberta</option><option>fechada</option><option>fiado</option><option>cancelada</option></select></div>
-          <div><label for="fCliente">Cliente</label><select id="fCliente"><option value="">Todos</option></select></div>
-          <div><label for="fDe">De</label><input id="fDe" type="date"></div>
-          <div><label for="fAte">Até</label><input id="fAte" type="date"></div>
-          <div class="alinha-fim"><button type="submit" class="pri">Filtrar</button> <button type="button" id="cmdLimpar">Limpar</button></div>
-        </form>
-        <div id="cmdMsg"></div>
-        <div class="tab" id="cmdTabela"></div>
-        <div class="rodape">
-          <button id="cmdAnt">‹ Anterior</button><span id="cmdPag"></span><button id="cmdProx">Próxima ›</button>
-        </div>
-      </div>
-      <div id="comandaDetalhe" hidden></div>
-    </section>
-
-    <!-- Tela de relatórios -->
-    <section class="card" id="viewRelatorios" hidden>
-      <h2>Relatórios</h2>
-      <form id="relForm" class="filtros">
-        <div><label for="relNome">Relatório</label><select id="relNome"></select></div>
-        <span id="relParams" class="filtros-int"></span>
-        <div class="alinha-fim"><button type="submit" class="pri">Gerar</button></div>
+  <main>
+    <section class="card" id="login">
+      <h2>Entrar</h2>
+      <form id="formLogin" class="grade" novalidate>
+        <div><label for="email">E-mail</label><input id="email" type="email" autocomplete="username"
+            value="admin@a3.local"></div>
+        <div><label for="senha">Senha</label><input id="senha" type="password" autocomplete="current-password"></div>
+        <div class="alinha-fim"><button class="pri" type="submit">Entrar</button></div>
       </form>
-      <p class="suave" id="relDescricao"></p>
-      <div id="relMsg"></div>
-      <div class="tab" id="relTabela"></div>
+      <p class="suave">Usuários de teste: <code>admin@a3.local</code> (administrador) e <code>ana@a3.local</code>
+        (atendente). Senha: <code>Senha@123</code>.</p>
+      <div id="msgLogin"></div>
     </section>
-  </section>
 
-</main>
+    <section id="app" hidden>
+      <nav class="card abas" id="abas" aria-label="Seções"></nav>
 
-<!-- Formulário do CRUD genérico -->
-<dialog id="dlgForm">
-  <form id="crudForm" novalidate>
-    <h2 id="crudFormTitulo"></h2>
-    <div class="grade" id="crudCampos"></div>
-    <div id="crudFormMsg"></div>
-    <div class="botoes"><button class="pri" type="submit">Salvar</button><button type="button" data-fechar>Cancelar</button></div>
-  </form>
-</dialog>
+      <section class="card" id="viewCrud" hidden>
+        <div class="barra">
+          <h2 id="crudTitulo"></h2>
+          <button class="pri" id="crudNovo">+ Novo registro</button>
+        </div>
+        <form id="crudFiltros" class="filtros"></form>
+        <div id="crudMsg"></div>
+        <div class="tab" id="crudLista"></div>
+        <div class="rodape">
+          <button id="crudAnt">‹ Anterior</button><span id="crudPag"></span><button id="crudProx">Próxima ›</button>
+        </div>
+      </section>
 
-<!-- Abrir comanda -->
-<dialog id="dlgComanda">
-  <form id="formComanda" novalidate>
-    <h2>Abrir comanda</h2>
-    <label for="novoCliente">Cliente *</label><select id="novoCliente"></select>
-    <div id="formComandaMsg"></div>
-    <div class="botoes"><button class="pri" type="submit">Abrir</button><button type="button" data-fechar>Cancelar</button></div>
-  </form>
-</dialog>
+      <!-- Tela de comandas -->
+      <section class="card" id="viewComandas" hidden>
+        <div id="comandasLista">
+          <div class="barra">
+            <h2>Comandas</h2>
+            <button class="pri" id="cmdNova">+ Abrir comanda</button>
+          </div>
+          <form id="cmdFiltros" class="filtros">
+            <div><label for="fStatus">Status</label>
+              <select id="fStatus">
+                <option value="">Todos</option>
+                <option>aberta</option>
+                <option>fechada</option>
+                <option>fiado</option>
+                <option>cancelada</option>
+              </select>
+            </div>
+            <div><label for="fCliente">Cliente</label><select id="fCliente">
+                <option value="">Todos</option>
+              </select></div>
+            <div><label for="fDe">De</label><input id="fDe" type="date"></div>
+            <div><label for="fAte">Até</label><input id="fAte" type="date"></div>
+            <div class="alinha-fim"><button type="submit" class="pri">Filtrar</button> <button type="button"
+                id="cmdLimpar">Limpar</button></div>
+          </form>
+          <div id="cmdMsg"></div>
+          <div class="tab" id="cmdTabela"></div>
+          <div class="rodape">
+            <button id="cmdAnt">‹ Anterior</button><span id="cmdPag"></span><button id="cmdProx">Próxima ›</button>
+          </div>
+        </div>
+        <div id="comandaDetalhe" hidden></div>
+      </section>
 
-<!-- Adicionar / editar item -->
-<dialog id="dlgItem">
-  <form id="formItem" novalidate>
-    <h2 id="itemTitulo"></h2>
-    <label for="itemProduto">Produto *</label><select id="itemProduto"></select>
-    <label for="itemQtd">Quantidade *</label><input id="itemQtd" type="number" min="1" step="1" value="1">
-    <label for="itemValor">Valor unitário <small>(vazio = preço atual do produto)</small></label>
-    <input id="itemValor" type="number" min="0" step="0.01">
-    <div id="formItemMsg"></div>
-    <div class="botoes"><button class="pri" type="submit">Salvar</button><button type="button" data-fechar>Cancelar</button></div>
-  </form>
-</dialog>
+      <!-- Tela de relatórios -->
+      <section class="card" id="viewRelatorios" hidden>
+        <h2>Relatórios</h2>
+        <form id="relForm" class="filtros">
+          <div><label for="relNome">Relatório</label><select id="relNome"></select></div>
+          <span id="relParams" class="filtros-int"></span>
+          <div class="alinha-fim"><button type="submit" class="pri">Gerar</button></div>
+        </form>
+        <p class="suave" id="relDescricao"></p>
+        <div id="relMsg"></div>
+        <div class="tab" id="relTabela"></div>
+      </section>
+    </section>
 
-<!-- Registrar pagamento -->
-<dialog id="dlgPagto">
-  <form id="formPagto" novalidate>
-    <h2>Registrar pagamento</h2>
-    <p class="suave" id="pagtoInfo"></p>
-    <label for="pagtoMetodo">Forma de pagamento *</label>
-    <select id="pagtoMetodo"><option value="pix">Pix</option><option value="dinheiro">Dinheiro</option>
-      <option value="cartao_credito">Cartão de crédito</option><option value="cartao_debito">Cartão de débito</option></select>
-    <label for="pagtoValor">Valor *</label><input id="pagtoValor" type="number" min="0.01" step="0.01">
-    <p class="suave">Pagamento dividido: registre um pagamento para cada forma, com o valor de cada parte.</p>
-    <div id="formPagtoMsg"></div>
-    <div class="botoes"><button class="pri" type="submit">Registrar</button><button type="button" data-fechar>Cancelar</button></div>
-  </form>
-</dialog>
+  </main>
 
-<script src="js/api.js"></script>
-<script src="js/crud.js"></script>
-<script src="js/comandas.js"></script>
-<script src="js/relatorios.js"></script>
-<script src="js/app.js"></script>
+  <!-- Formulário do CRUD genérico -->
+  <dialog id="dlgForm">
+    <form id="crudForm" novalidate>
+      <h2 id="crudFormTitulo"></h2>
+      <div class="grade" id="crudCampos"></div>
+      <div id="crudFormMsg"></div>
+      <div class="botoes"><button class="pri" type="submit">Salvar</button><button type="button"
+          data-fechar>Cancelar</button></div>
+    </form>
+  </dialog>
+
+  <!-- Abrir comanda -->
+  <dialog id="dlgComanda">
+    <form id="formComanda" novalidate>
+      <h2>Abrir comanda</h2>
+      <label for="novoCliente">Cliente *</label><select id="novoCliente"></select>
+      <div id="formComandaMsg"></div>
+      <div class="botoes"><button class="pri" type="submit">Abrir</button><button type="button"
+          data-fechar>Cancelar</button></div>
+    </form>
+  </dialog>
+
+  <!-- Adicionar / editar item -->
+  <dialog id="dlgItem">
+    <form id="formItem" novalidate>
+      <h2 id="itemTitulo"></h2>
+      <label for="itemProduto">Produto *</label><select id="itemProduto"></select>
+      <label for="itemQtd">Quantidade *</label><input id="itemQtd" type="number" min="1" step="1" value="1">
+      <label for="itemValor">Valor unitário <small>(vazio = preço atual do produto)</small></label>
+      <input id="itemValor" type="number" min="0" step="0.01">
+      <div id="formItemMsg"></div>
+      <div class="botoes"><button class="pri" type="submit">Salvar</button><button type="button"
+          data-fechar>Cancelar</button></div>
+    </form>
+  </dialog>
+
+  <!-- Registrar pagamento -->
+  <dialog id="dlgPagto">
+    <form id="formPagto" novalidate>
+      <h2>Registrar pagamento</h2>
+      <p class="suave" id="pagtoInfo"></p>
+      <label for="pagtoMetodo">Forma de pagamento *</label>
+      <select id="pagtoMetodo">
+        <option value="pix">Pix</option>
+        <option value="dinheiro">Dinheiro</option>
+        <option value="cartao_credito">Cartão de crédito</option>
+        <option value="cartao_debito">Cartão de débito</option>
+      </select>
+      <label for="pagtoValor">Valor *</label><input id="pagtoValor" type="number" min="0.01" step="0.01">
+      <p class="suave">Pagamento dividido: registre um pagamento para cada forma, com o valor de cada parte.</p>
+      <div id="formPagtoMsg"></div>
+      <div class="botoes"><button class="pri" type="submit">Registrar</button><button type="button"
+          data-fechar>Cancelar</button></div>
+    </form>
+  </dialog>
+
+  <script src="js/api.js"></script>
+  <script src="js/crud.js"></script>
+  <script src="js/comandas.js"></script>
+  <script src="js/relatorios.js"></script>
+  <script src="js/app.js"></script>
 </body>
+
 </html>
